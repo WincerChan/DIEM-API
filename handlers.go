@@ -36,8 +36,10 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 		hh := &Hit{ID, HITO, SOURCE}
 		js, _ := json.Marshal(hh)
 		fmt.Fprintf(w, "%s", js)
-	} else if param == "main" {
+	} else if param == "word" {
 		fmt.Fprintf(w, "%s", HITO)
+	} else if param == "main" {
+		fmt.Fprintf(w, "var hito = '%s\\n——「%s」'", HITO, SOURCE)
 	}
 }
 func checkErr(err error) {
