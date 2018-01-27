@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
-	"log"
 	"net/http"
-	"os"
 )
 
 type Hit struct {
@@ -40,29 +38,13 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "%s", HITO)
 	} else if param == "main" {
 		fmt.Fprintf(w, "var hito = '%s\\n——「%s」'", HITO, SOURCE)
+	} else {
+		w.WriteHeader(404)
+		fmt.Fprint(w, "error: Invalid API key")
 	}
 }
 func checkErr(err error) {
 	if err != nil {
 		panic(err)
-	}
-}
-
-func logRequest(handler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("%s %s %s\n", r.RemoteAddr, r.Method, r.URL)
-		handler.ServeHTTP(w, r)
-	})
-}
-
-func openLogFile(logfile string) {
-	if logfile != "" {
-		lf, err := os.OpenFile(logfile, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0640)
-
-		if err != nil {
-			log.Fatal("OpenLogfile: os.Openfile:", err)
-		}
-
-		log.SetOutput(lf)
 	}
 }

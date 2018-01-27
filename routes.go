@@ -32,7 +32,7 @@ var routes = Routes{
 	Route{
 		"Hitokoto",
 		"GET",
-		"/hitokoto/{id}",
+		"/hitokoto/{Id}",
 		Hitokoto,
 	},
 }
