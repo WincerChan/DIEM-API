@@ -8,7 +8,7 @@ import (
 func main() {
 	router := NewRouter()
 
-    log.Println("listening in 8080 port.")
+    log.Println("listening in 520 port.")
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":520", router))
 }
