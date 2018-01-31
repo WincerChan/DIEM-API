@@ -1,0 +1,17 @@
+language: go
+
+go:
+- 1.9
+
+install:
+- go get -v github.com/mattn/go-sqlite3
+- go get -v github.com/gorilla/mux
+
+scripts:
+- go build
+- mmv id_rsa $HOME/.ssh/id_rsa
+- chmod +x deploy
+- ./deploy
+
+after_script:
+- echo "Deployment successful."
