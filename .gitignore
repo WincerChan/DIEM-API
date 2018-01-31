@@ -15,3 +15,5 @@
 
 *.db
 *.log
+deploy
+id_rsa
