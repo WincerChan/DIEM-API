@@ -17,3 +17,4 @@
 *.log
 deploy
 id_rsa
+.directory
