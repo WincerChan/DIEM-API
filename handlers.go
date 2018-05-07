@@ -4,16 +4,19 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"net/http"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
+// Hit database composition
 type Hit struct {
-	ID     string
-	HITO   string
-	SOURCE string
+	ID     string // Hitokoto ID
+	HITO   string // Hitokoto sentence
+	SOURCE string // Hitokoto source
 }
 
+// Hitokoto handle function
 func Hitokoto(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("sqlite3", "HITODB.db")
 	checkErr(err)
