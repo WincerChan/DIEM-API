@@ -18,3 +18,4 @@
 deploy
 id_rsa
 .directory
+config.json

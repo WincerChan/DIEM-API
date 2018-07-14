@@ -1,53 +1,64 @@
 package main
 
 import (
-	"database/sql"
+	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"math/big"
 	"net/http"
-
-	_ "github.com/mattn/go-sqlite3"
 )
 
 // Hit database composition
 type Hit struct {
-	ID     string // Hitokoto ID
-	HITO   string // Hitokoto sentence
-	SOURCE string // Hitokoto source
+	Hitokoto string `json:"hitokoto"` // Hitokoto sentence
+	Source   string `json:"source"`   // Hitokoto source
 }
 
 // Hitokoto handle function
 func Hitokoto(w http.ResponseWriter, r *http.Request) {
-	db, err := sql.Open("sqlite3", "HITODB.db")
-	checkErr(err)
-
 	// query
-	var ID string
-	var HITO string
-	var SOURCE string
-
-	err1 := db.QueryRow("SELECT * FROM hitokoto ORDER BY RANDOM() LIMIT 1").Scan(&ID, &HITO, &SOURCE)
-	checkErr(err1)
+	var hito string
+	var source string
+	var content string
 
 	// get params
-	param := r.URL.Query().Get("encode")
-	if param == "js" {
-		fmt.Fprintf(w, "function hitokoto(){document.write('%s&#10;——「%s」');}", HITO, SOURCE)
-	} else if param == "json" {
-		hh := &Hit{ID, HITO, SOURCE}
-		js, _ := json.Marshal(hh)
-		fmt.Fprintf(w, "%s", js)
-	} else if param == "word" {
-		fmt.Fprintf(w, "%s", HITO)
-	} else if param == "main" {
-		fmt.Fprintf(w, "var hito = '%s\\n——「%s」'", HITO, SOURCE)
+	encode := r.URL.Query().Get("encode")
+	length := r.URL.Query().Get("length")
+	// if url param have callback then will ignore encode
+	callback := r.URL.Query().Get("callback")
+	if length != "" {
+		err1 := db.QueryRow("SELECT hitokoto, source FROM main WHERE LENGTH(hitokoto) < ? ORDER BY RAND() LiMIT 1;", length).Scan(&hito, &source)
+		if err1 != nil {
+			hito = ""
+			source = ""
+		}
 	} else {
-		w.WriteHeader(404)
-		fmt.Fprint(w, "error: Invalid API key")
+		nBig, err := rand.Int(rand.Reader, big.NewInt(AMOUNT))
+		n := nBig.Int64()
+		err = db.QueryRow("SELECT hitokoto, source FROM main LIMIT ?, 1;", n).Scan(&hito, &source)
+		checkErr(err)
 	}
-}
-func checkErr(err error) {
-	if err != nil {
-		panic(err)
+
+	if callback != "" {
+		hs := &Hit{hito, source}
+		fmtJSON, _ := json.Marshal(hs)
+		fmt.Fprintf(w, "%s(%s);", callback, fmtJSON)
+	} else {
+		if encode == "js" {
+			content = fmt.Sprintf("%s——「%s」", hito, source)
+			fmt.Fprintf(w, "var hitokoto=%s;var dom=document.querySelector('.hitokoto');Array.isArray(dom)?dom[0].innerText=hitokoto:dom.innerText=hitokoto;", content)
+		} else if encode == "json" {
+			hs := &Hit{
+				hito,
+				source,
+			}
+			fmtJSON, _ := json.Marshal(hs)
+			fmt.Fprintf(w, "%s", string(fmtJSON))
+		} else if encode == "text" {
+			fmt.Fprintf(w, "%s", hito)
+		} else {
+			content = fmt.Sprintf("%s——「%s」", hito, source)
+			fmt.Fprintf(w, "%s", content)
+		}
 	}
 }
