@@ -29,7 +29,6 @@ func initDatabase() {
 	config := Config{}
 	err := decoder.Decode(&config)
 	url := fmt.Sprintf("%s:%s@/hitokoto?charset=utf8", config.User, config.Password)
-	fmt.Println(config.User)
 	db, err = sql.Open("mysql", url)
 	checkErr(err)
 	err1 := db.QueryRow("SELECT COUNT(id) FROM main;").Scan(&AMOUNT)
