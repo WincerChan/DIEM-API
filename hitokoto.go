@@ -22,10 +22,11 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 	var content string
 
 	// get params
-	encode := r.URL.Query().Get("encode")
-	length := r.URL.Query().Get("length")
+	r.ParseForm()
+	encode := r.Form.Get("encode")
+	length := r.Form.Get("length")
 	// if url param have callback then will ignore encode
-	callback := r.URL.Query().Get("callback")
+	callback := r.Form.Get("callback")
 	if length != "" {
 		err1 := db.QueryRow("SELECT hitokoto, source FROM main WHERE LENGTH(hitokoto) < ? ORDER BY RAND() LiMIT 1;", length).Scan(&hito, &source)
 		if err1 != nil {
@@ -33,7 +34,7 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 			source = ""
 		}
 	} else {
-		nBig, err := rand.Int(rand.Reader, big.NewInt(AMOUNT))
+		nBig, err := rand.Int(rand.Reader, big.NewInt(HITOKOTOAMOUNT))
 		n := nBig.Int64()
 		err = db.QueryRow("SELECT hitokoto, source FROM main LIMIT ?, 1;", n).Scan(&hito, &source)
 		checkErr(err)
