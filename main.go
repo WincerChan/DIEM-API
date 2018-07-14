@@ -11,7 +11,8 @@ func main() {
 	initHitokotoDB()
 
 	http.HandleFunc("/hitokoto/v2/", Hitokoto)
+	http.HandleFunc("/hitokoto/get", Redirect301)
 	log.Println("listening in 520 port.")
-	err := http.ListenAndServe(":8020", nil)
+	err := http.ListenAndServe(":520", nil)
 	checkErr(err)
 }

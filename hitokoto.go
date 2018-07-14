@@ -14,6 +14,11 @@ type Hit struct {
 	Source   string `json:"source"`   // Hitokoto source
 }
 
+// Redirect301 old api
+func Redirect301(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "https://api.itswincer.com/hitokoto/v2/", http.StatusMovedPermanently)
+}
+
 // Hitokoto handle function
 func Hitokoto(w http.ResponseWriter, r *http.Request) {
 	// query
@@ -46,14 +51,16 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "%s(%s);", callback, fmtJSON)
 	} else {
 		if encode == "js" {
-			content = fmt.Sprintf("%s——「%s」", hito, source)
-			fmt.Fprintf(w, "var hitokoto=%s;var dom=document.querySelector('.hitokoto');Array.isArray(dom)?dom[0].innerText=hitokoto:dom.innerText=hitokoto;", content)
+			content = fmt.Sprintf("%s\\n——「%s」", hito, source)
+			w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+			fmt.Fprintf(w, "var hitokoto=\"%s\";var dom=document.querySelector('.hitokoto');Array.isArray(dom)?dom[0].innerText=hitokoto:dom.innerText=hitokoto;", content)
 		} else if encode == "json" {
 			hs := &Hit{
 				hito,
 				source,
 			}
 			fmtJSON, _ := json.Marshal(hs)
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
 			fmt.Fprintf(w, "%s", string(fmtJSON))
 		} else if encode == "text" {
 			fmt.Fprintf(w, "%s", hito)
