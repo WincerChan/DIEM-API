@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>DIEM API+</title>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/milligram@1.3.0/dist/milligram.min.css">
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:100">
+	<style>
+		hr {
+			border-top: 1px solid rgba(0, 0, 0, .12);
+			margin: 1.3rem 0;
+		}
+
+		.container {
+			max-width: 50em;
+		}
+
+		.title {
+			font-size: 5rem;
+			font-family: 'Lato'
+		}
+
+		body {
+			background: #f8f9fa
+		}
+
+		span {
+			display: inline-block;
+			padding: .2rem .2rem
+		}
+
+		.section {
+			text-align: center;
+		}
+
+		.container {
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+		}
+
+		.action {
+			text-align: center
+		}
+
+		.section-footer {
+			text-align: center;
+			padding: 2rem .5rem 0 .5rem;
+			color: #acb3c2;
+		}
+
+		#heart {
+			color: #e85600;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="section">
+		<div class="container">
+			<h1 class="title">
+				DIEM API+
+			</h1>
+			<hr>
+			<div class="action">
+				<a href="https://deim.im">Home</a> |
+				<a href="https://blog.itswincer.com">Blog</a>
+			</div>
+			<footer class="section section-footer">
+				©
+				<span year></span>
+				<span id="heart" class="text-error">♥</span>
+				Made by
+				<a href="https://www.itswincer.com" target="_blank">Wincer</a>
+			</footer>
+		</div>
+	</div>
+	<script>var copyrightNow = (new Date).getFullYear(), textContent = document.querySelector("span[year]"); copyrightSince = 2017, textContent.textContent = copyrightSince === copyrightNow ? copyrightNow : copyrightSince + " - " + copyrightNow;</script>
+</body>
+
+</html>
