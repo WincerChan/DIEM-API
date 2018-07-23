@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"syscall"
 )
 
 // HITOKOTOAMOUNT is Number of databases
 var HITOKOTOAMOUNT int64
 var db *sql.DB
 var err error
+var file *os.File
 
 // MysqlCONF is pwd and user
 type MysqlCONF struct {
@@ -31,10 +33,17 @@ func initHitokotoDB() {
 	checkErr(err1)
 }
 
+func initLogFile() {
+	file, err = os.OpenFile("debug.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0640)
+	defer file.Close()
+	syscall.Dup2(int(file.Fd()), 1)
+	syscall.Dup2(int(file.Fd()), 2)
+}
+
 func checkErr(err error) {
 	switch {
 	case err == sql.ErrNoRows:
-		log.Printf(" None Query ")
+		log.Println(" None Query ")
 	case err != nil:
 		log.Fatal(err)
 	}

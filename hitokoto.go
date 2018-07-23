@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"log"
 	"math/big"
 	"net/http"
 )
@@ -37,6 +38,7 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 	} else {
 		charset = "utf-8"
 	}
+	log.Println(r.URL.Path)
 
 	if length != "" {
 		err1 := db.QueryRow("SELECT hitokoto, source FROM main WHERE LENGTH(hitokoto) < ? ORDER BY RAND() LiMIT 1;", length).Scan(&hito, &source)
