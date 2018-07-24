@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"syscall"
 )
@@ -38,6 +39,16 @@ func initLogFile() {
 	defer file.Close()
 	syscall.Dup2(int(file.Fd()), 1)
 	syscall.Dup2(int(file.Fd()), 2)
+}
+
+//DisallowMethod is allow current method
+func DisallowMethod(w http.ResponseWriter, allow string, method string) bool {
+	if allow != method {
+		w.WriteHeader(405)
+		fmt.Fprintln(w, "<h1>405 Not Allowed</h1>")
+		return true
+	}
+	return false
 }
 
 func checkErr(err error) {

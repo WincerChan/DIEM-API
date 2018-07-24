@@ -9,12 +9,13 @@ import (
 
 func main() {
 	initHitokotoDB()
-	initLogFile()
+	// initLogFile()
 
 	http.HandleFunc("/hitokoto/v2/", Hitokoto)
 	http.HandleFunc("/hitokoto/get", Redirect301)
-	http.Handle("/", http.FileServer(http.Dir("./template")))
-	log.Println("listening in 520 port.")
-	err := http.ListenAndServe(":520", nil)
+	http.HandleFunc("/", Home)
+	// http.Handle("/", http.FileServer(http.Dir("./template")))
+	log.Println("listening in 8020 port.")
+	err := http.ListenAndServe(":8020", nil)
 	checkErr(err)
 }

@@ -22,6 +22,10 @@ func Redirect301(w http.ResponseWriter, r *http.Request) {
 
 // Hitokoto handle function
 func Hitokoto(w http.ResponseWriter, r *http.Request) {
+	if DisallowMethod(w, "GET", r.Method) {
+		// if method not allow, just return
+		return
+	}
 	// query
 	var hito string
 	var source string
