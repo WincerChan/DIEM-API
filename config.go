@@ -43,7 +43,7 @@ func initLogFile() {
 
 //DisallowMethod is allow current method
 func DisallowMethod(w http.ResponseWriter, allow string, method string) bool {
-	if allow != method {
+	if allow != method && allow != "HEAD" {
 		w.WriteHeader(405)
 		fmt.Fprintln(w, "<h1>405 Not Allowed</h1>")
 		return true

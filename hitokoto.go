@@ -58,11 +58,6 @@ func GenRandomInt() {
 
 // Hitokoto handle function
 func Hitokoto(w http.ResponseWriter, r *http.Request) {
-	if DisallowMethod(w, "GET", r.Method) {
-		// if method not allow, just return
-		return
-	}
-
 	// get params
 	r.ParseForm()
 	encode := r.Form.Get("encode")
