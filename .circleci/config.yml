@@ -12,6 +12,7 @@ jobs:
       - run:
           name: Build
           command: |
+            go get -u github.com/go-sql-driver/mysql
             go build -o main
       - save_cache:
           key: hitokoto-v1-{{ checksum "config_sample.json" }}
