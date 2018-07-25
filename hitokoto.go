@@ -7,6 +7,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"strconv"
 )
 
 // Hit database composition
@@ -15,9 +16,54 @@ type Hit struct {
 	Source   string `json:"source"`   // Hitokoto source
 }
 
+// query
+var hito string
+var source string
+var content string
+
 // Redirect301 old api
 func Redirect301(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "https://api.itswincer.com/hitokoto/v2/", http.StatusMovedPermanently)
+}
+
+// CheckTimeout if the timeout then new connect
+// func CheckTimeout(param string) {
+// 	switch param {
+// 	case "length":
+// 		HasLength()
+// 	default:
+// 		GenRandomInt()
+// 	}
+// }
+
+func handleError(errorType string) {
+	switch errorType {
+	case "invalidLengthError":
+		hito = "length 参数须为数字且大于 5 哦！"
+		source = "Tips"
+	default:
+		hito = "哦~"
+		source = "袴田日向"
+	}
+}
+
+// HasLength if url param has length
+func HasLength(length string) {
+	lengthInt, err := strconv.Atoi(length)
+	if err != nil || lengthInt < 5 {
+		handleError("invalidLengthError")
+		return
+	}
+	err1 := db.QueryRow("SELECT hitokoto, source FROM main WHERE LENGTH(hitokoto) < ? ORDER BY RAND() LiMIT 1;", length).Scan(&hito, &source)
+	checkErr(err1)
+}
+
+// GenRandomInt to gen a random int
+func GenRandomInt() {
+	nBig, err := rand.Int(rand.Reader, big.NewInt(HITOKOTOAMOUNT))
+	n := nBig.Int64()
+	err = db.QueryRow("SELECT hitokoto, source FROM main LIMIT ?, 1;", n).Scan(&hito, &source)
+	checkErr(err)
 }
 
 // Hitokoto handle function
@@ -26,10 +72,6 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 		// if method not allow, just return
 		return
 	}
-	// query
-	var hito string
-	var source string
-	var content string
 
 	// get params
 	r.ParseForm()
@@ -45,16 +87,9 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL.Path)
 
 	if length != "" {
-		err1 := db.QueryRow("SELECT hitokoto, source FROM main WHERE LENGTH(hitokoto) < ? ORDER BY RAND() LiMIT 1;", length).Scan(&hito, &source)
-		if err1 != nil {
-			hito = ""
-			source = ""
-		}
+		HasLength(length)
 	} else {
-		nBig, err := rand.Int(rand.Reader, big.NewInt(HITOKOTOAMOUNT))
-		n := nBig.Int64()
-		err = db.QueryRow("SELECT hitokoto, source FROM main LIMIT ?, 1;", n).Scan(&hito, &source)
-		checkErr(err)
+		GenRandomInt()
 	}
 
 	if callback != "" {
