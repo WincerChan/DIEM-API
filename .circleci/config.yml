@@ -1,0 +1,34 @@
+defaults: &defaults
+  docker:
+    - image: circleci/golang:1.10.3
+
+version: 2
+
+jobs: 
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+        name: Build
+        command: |
+          go build -o main
+      - save_cache:
+          key: hitokoto-v1-{{ checksum "config_sample.json" }}
+          paths:
+            - main
+
+  depoly:
+    <<: *defaults
+    steps:
+      - checkout
+      - restore_cache:
+        keys:
+        - hitokoto-v1-{{ checksum "config_sample.json" }}
+      - deploy:
+        name: Deploy
+        command: |
+          mkdir -p ~/.ssh
+          touch ~/.ssh/known_hosts
+          { ssh-keyscan $SSH_IP 2> /dev/null; } >> ~/.ssh/known_hosts
+          scp main $SSH_USER@$SSH_IP:/root/API/hitokoto/
