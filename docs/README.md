@@ -1,6 +1,8 @@
 # Hitokoto
 
-[![Build Status](https://travis-ci.org/WincerChan/Hitokoto.svg?branch=master)](https://travis-ci.org/WincerChan/Hitokoto)
+[![CircleCI](https://img.shields.io/circleci/project/github/WincerChan/Meme-generator.svg?style=flat-square)](https://circleci.com/gh/WincerChan/Hitokoto/tree/master)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/WincerChan/Hitokoto.svg?style=flat-square)
 
 ~~接口地址： `https://api.itswincer.com/hitokoto/get?encode=`~~ 
 
