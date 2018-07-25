@@ -10,9 +10,9 @@ jobs:
     steps:
       - checkout
       - run:
-        name: Build
-        command: |
-          go build -o main
+          name: Build
+          command: |
+            go build -o main
       - save_cache:
           key: hitokoto-v1-{{ checksum "config_sample.json" }}
           paths:
@@ -23,12 +23,12 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-        keys:
-        - hitokoto-v1-{{ checksum "config_sample.json" }}
+          keys:
+            - hitokoto-v1-{{ checksum "config_sample.json" }}
       - deploy:
-        name: Deploy
-        command: |
-          mkdir -p ~/.ssh
-          touch ~/.ssh/known_hosts
-          { ssh-keyscan $SSH_IP 2> /dev/null; } >> ~/.ssh/known_hosts
-          scp main $SSH_USER@$SSH_IP:/root/API/hitokoto/
+          name: Deploy
+          command: |
+            mkdir -p ~/.ssh
+            touch ~/.ssh/known_hosts
+            { ssh-keyscan $SSH_IP 2> /dev/null; } >> ~/.ssh/known_hosts
+            scp main $SSH_USER@$SSH_IP:/root/API/hitokoto/
