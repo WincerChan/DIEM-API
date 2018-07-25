@@ -4,7 +4,7 @@
 
 ~~接口地址： `https://api.itswincer.com/hitokoto/get?encode=`~~ 
 
-新的接口地址：https://api.itswincer.com/hitokoto/v2/，旧版本的地址会 301 至新版本。
+新的接口地址：https://api.itswincer.com/hitokoto/v2/ 旧版本的地址会 301 至新版本。
 
 > 注意：所有请求的类型**仅支持** "GET" 
 
