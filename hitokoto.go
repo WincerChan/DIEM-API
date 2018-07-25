@@ -26,16 +26,6 @@ func Redirect301(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "https://api.itswincer.com/hitokoto/v2/", http.StatusMovedPermanently)
 }
 
-// CheckTimeout if the timeout then new connect
-// func CheckTimeout(param string) {
-// 	switch param {
-// 	case "length":
-// 		HasLength()
-// 	default:
-// 		GenRandomInt()
-// 	}
-// }
-
 func handleError(errorType string) {
 	switch errorType {
 	case "invalidLengthError":
@@ -91,18 +81,21 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 	} else {
 		GenRandomInt()
 	}
-
-	if callback != "" {
-		hs := &Hit{hito, source}
-		fmtJSON, _ := json.Marshal(hs)
-		w.Header().Set("Content-Type", "text/javascript; charset="+charset)
-		fmt.Fprintf(w, "%s(%s);", callback, fmtJSON)
-	} else {
-		if encode == "js" {
+	// hasCallback is return data
+	hasCallback := func() {
+		if callback != "" {
+			hs := &Hit{hito, source}
+			fmtJSON, _ := json.Marshal(hs)
+			w.Header().Set("Content-Type", "text/javascript; charset="+charset)
+			fmt.Fprintf(w, "%s(%s);", callback, fmtJSON)
+			return
+		}
+		switch encode {
+		case "js":
 			content = fmt.Sprintf("%s\\n——「%s」", hito, source)
 			w.Header().Set("Content-Type", "text/javascript; charset="+charset)
 			fmt.Fprintf(w, "var hitokoto=\"%s\";var dom=document.querySelector('.hitokoto');Array.isArray(dom)?dom[0].innerText=hitokoto:dom.innerText=hitokoto;", content)
-		} else if encode == "json" {
+		case "json":
 			hs := &Hit{
 				hito,
 				source,
@@ -110,13 +103,14 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 			fmtJSON, _ := json.Marshal(hs)
 			w.Header().Set("Content-Type", "application/json; charset="+charset)
 			fmt.Fprintf(w, "%s", string(fmtJSON))
-		} else if encode == "text" {
+		case "text":
 			w.Header().Set("Content-Type", "text/plain; charset="+charset)
 			fmt.Fprintf(w, "%s", hito)
-		} else {
+		default:
 			w.Header().Set("Content-Type", "text/plain; charset="+charset)
 			content = fmt.Sprintf("%s——「%s」", hito, source)
 			fmt.Fprintf(w, "%s", content)
 		}
 	}
+	hasCallback()
 }
