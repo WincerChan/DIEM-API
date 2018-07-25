@@ -19,7 +19,7 @@ jobs:
           paths:
             - main
 
-  depoly:
+  deploy:
     <<: *defaults
     steps:
       - checkout
@@ -32,4 +32,14 @@ jobs:
             mkdir -p ~/.ssh
             touch ~/.ssh/known_hosts
             { ssh-keyscan $SSH_IP 2> /dev/null; } >> ~/.ssh/known_hosts
-            scp main $SSH_USER@$SSH_IP:/root/API/hitokoto/
+            scp main $SSH_USER@$SSH_IP:/root/API/main
+
+workflows:
+  version: 2
+
+  Hito-CI:
+    jobs:
+      - build
+      - deploy:
+          requires:
+            - build
