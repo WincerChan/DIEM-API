@@ -23,7 +23,7 @@ var content string
 
 // Redirect301 old api
 func Redirect301(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "https://api.itswincer.com/hitokoto/v2/", http.StatusMovedPermanently)
+	http.Redirect(w, r, "/hitokoto/v2/", http.StatusMovedPermanently)
 }
 
 func handleError(errorType string) {
