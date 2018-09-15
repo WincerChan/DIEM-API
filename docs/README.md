@@ -6,7 +6,9 @@
 
 ~~接口地址： `https://api.itswincer.com/hitokoto/get?encode=`~~ 
 
-新的接口地址：https://api.itswincer.com/hitokoto/v2/ 旧版本的地址会 301 至新版本。
+新的接口地址：https://api.itswincer.com/hitokoto/v2/ 旧版本的地址会 301 至新版本的地址。
+
+目前数据库里共计 `15371` 条一言。
 
 > 注意：所有请求的类型**仅支持** "GET" 
 
