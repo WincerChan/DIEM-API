@@ -1,17 +1,15 @@
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" lazyload>
-    <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" lazyload>
+<script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
 </head>
-
 <body>
-    <div id="aplayer"></div>
-    <script>
-        function _asyncToGenerator(n) { return function () { var t = n.apply(this, arguments); return new Promise(function (n, r) { return function e(o, a) { try { var i = t[o](a), c = i.value } catch (n) { return void r(n) } if (!i.done) return Promise.resolve(c).then(function (n) { e("next", n) }, function (n) { e("throw", n) }); n(c) }("next") }) } } var getJSONP = function (n, t) { this.url = n + "?"; return new Promise((n, r) => { !function (n) { for (const t in n) { const r = n[t]; url += "callback" == t ? t + '=' + r : t + '=' + r + '&' } }(t); const e = url.match(/.*?callback=(.*)/)[1]; window[e] = function (t) { n(t) }, (function () { let n = document.createElement("script"); return n.setAttribute("src", url), document.body.appendChild(n), n }()).onerror = function () { r("error") } }) }, parse = function (n) { let t = (r = _asyncToGenerator(function* (n) { let t = Math.floor(2147483647 * Math.random()) * Math.floor(1e3 * Date.now()) % 1e10, r = e(n, t), o = yield getJSONP(r.url, r.params); return 'https://dl.stream.qqmusic.qq.com/' + o.data.items[0].filename + '?vkey=' + o.data.items[0].vkey + '&guid=' + t + '&uin=0&fromtag=66' }), function (n) { return r.apply(this, arguments) }); var r, e = function (n, t) { let r = 'C400' + n + '.m4a', e = o(); return Info = { url: "https://c.y.qq.com/base/fcgi-bin/fcg_music_express_mobile3.fcg", params: { format: "json", cid: "205361747", uin: "0", songmid: n, filename: r, guid: t, callback: e } }, Info }, o = function () { return Math.random().toString(36).replace(/[^a-z]+/g, "").substr(0, 3) }; return t(n) };
+<div id="aplayer"></div>
+<script>
         function getLrc(songid) {
-            this.url = 'https://music.163.com/api/song/media?id=' + songid + '&callback=getPic';
+            this.url = `https://music.163.com/api/song/media?id=${songid}&callback=getPic`;
 
             function createScript() {
                 let script = document.createElement('script');
@@ -29,53 +27,46 @@
                 }
             })
         }
+        function getDetail(songId) {
+            this.url = `https://api.imjad.cn/cloudmusic/?id=${songId}&type=detail`;
+            return fetch(url);
+        }
 
         function getQuery() {
-            let url = new URL(window.location.href),
-                mid = url.searchParams.get('mid'),
-                pic = url.searchParams.get('pic'),
-                author = url.searchParams.get('author'),
-                title = url.searchParams.get('title'),
-                lrc = url.searchParams.get('lrc');
-            return {
-                'mid': mid,
-                'pic': pic,
-                'author': author,
-                'title': title,
-                'lrc': lrc,
-            }
+            let url = new URL(window.location.href);
+            return url.searchParams.get('id')
         }
 
-        function parsePic(pic) {
-            return 'https://y.gtimg.cn/music/photo_new/T002R150x150' + pic + '.jpg'
-        }
-        var songInfo = getQuery();
-        console.log(songInfo)
-        Promise.all([getLrc(songInfo.lrc), parse(songInfo.mid)])
+        var songId = getQuery();
+        Promise.all([getLrc(songId), getDetail(songId)])
             .then(resps => {
-                [this.lrc, this.url] = [resps[0].lyric, resps[1]];
-                console.log(resps)
-                if (!this.lrc) {
-                    this.lrc = '[00:00.00]纯音乐，请欣赏\n'
-                }
-                new APlayer({
-                    container: document.querySelector("#aplayer"),
-                    narrow: false,
-                    autoplay: false,
-                    showlrc: 3,
-                    mutex: true,
-                    lrcType: 1,
-                    theme: "#ad7a86",
-                    music: [{
-                        title: songInfo.title,
-                        author: songInfo.author,
-                        url: this.url,
-                        pic: parsePic(songInfo.pic),
-                        lrc: this.lrc,
-                    }]
+                [lrc, detail] = [resps[0].lyric, resps[1].text()];
+                detail.then(resp => {
+                    if (!lrc) {
+                        lrc = '[00:00.00]纯音乐，请欣赏\n'
+                    }
+                    resp = JSON.parse(resp)
+                    new APlayer({
+                        container: document.querySelector("#aplayer"),
+                        narrow: false,
+                        autoplay: false,
+                        showlrc: 3,
+                        mutex: true,
+                        lrcType: 1,
+                        theme: "#ad7a86",
+                        music: [{
+                            title: resp.songs[0].name,
+                            author: resp.songs[0].ar[0].name,
+                            url: `https://api.imjad.cn/cloudmusic/?id=${songId}&raw=true`,
+                            pic: resp.songs[0].al.picUrl + '?param=130y130',
+                            lrc: lrc,
+                        }]
+                    })
                 })
             })
     </script>
 </body>
+<script>
 
+</script>
 </html>
