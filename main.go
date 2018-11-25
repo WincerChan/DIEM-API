@@ -1,26 +1,31 @@
 package main
 
 import (
-	"flag"
-	"log"
-	"net/http"
+	L "DIEM-API/middleware/logger"
+	R "DIEM-API/middleware/recovery"
+
+	"github.com/gin-gonic/gin"
 )
 
-func init() {
-	configPath := flag.String(
-		"config",
-		"config.yaml",
-		"Database Config file.")
-	flag.Parse()
-	initConfig(*configPath)
-	initHitokotoDB()
-	initRedis()
+func pong(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"message": "pong",
+	})
+}
+
+func pang(c *gin.Context) {
+	k := make([]int, 0)
+	_ = k[0]
+	c.JSON(200, gin.H{
+		"message": "pang",
+	})
 }
 
 func main() {
-	log.Println("listening in " + config.ListenPort + " port.")
-	http.HandleFunc("/hitokoto/v2/", Hitokoto)
-
-	err = http.ListenAndServe(config.ListenPort, nil)
-	checkErr(err)
+	r := gin.New()
+	r.Use(L.Log)
+	r.Use(R.Recover)
+	r.GET("/pong", pong)
+	r.GET("/pang", pang)
+	r.Run()
 }
