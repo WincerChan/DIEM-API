@@ -8,14 +8,28 @@ import (
 )
 
 type logWriter struct {
-	Stderr  io.Writer
-	ErrFile io.Writer
+	stderr    io.Writer
+	errlog    io.Writer
+	accesslog io.Writer
 }
 
-var LogWriter *logWriter
+var Log *logWriter
+
+func (l *logWriter) GetWriter(w string) io.Writer {
+	switch w {
+	case "std":
+		return l.stderr
+	case "error":
+		return l.errlog
+	case "access":
+		return l.accesslog
+	}
+	return nil
+}
 
 func init() {
-	LogWriter = new(logWriter)
-	LogWriter.Stderr = zerolog.ConsoleWriter{Out: os.Stderr}
-	LogWriter.ErrFile, _ = os.Create("error.log")
+	Log = new(logWriter)
+	Log.stderr = zerolog.ConsoleWriter{Out: os.Stderr}
+	Log.errlog, _ = os.Create("error.log")
+	Log.accesslog, _ = os.Create("access.log")
 }
