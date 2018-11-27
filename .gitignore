@@ -20,4 +20,4 @@ server
 id_rsa
 .directory
 config.yaml
-
+_log/

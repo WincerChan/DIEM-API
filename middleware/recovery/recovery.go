@@ -13,7 +13,7 @@ import (
 var zlog zerolog.Logger
 
 func init() {
-	writer := config.Log.GetWriter("error")
+	writer := config.GetWriter("error")
 	zlog = zerolog.New(writer).
 		With().Timestamp().Logger()
 }
