@@ -10,8 +10,8 @@ import (
 )
 
 var stderr io.Writer
-var errLog *T.Log
-var accessLog *T.Log
+var errLog *T.Logger
+var accessLog *T.Logger
 
 func init() {
 	stderr = zerolog.ConsoleWriter{Out: os.Stderr}
