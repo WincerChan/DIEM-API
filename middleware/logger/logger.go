@@ -17,11 +17,11 @@ func initLogWriter(w io.Writer) {
 
 func init() {
 	ginMode := gin.Mode()
-	initLogWriter(config.GetWriter("std"))
 	if ginMode == "release" {
 		initLogWriter(config.GetWriter("access"))
 		return
 	}
+	initLogWriter(config.GetWriter("std"))
 }
 
 func Log(c *gin.Context) {
