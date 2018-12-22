@@ -1,34 +1,20 @@
-
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" lazyload>
-<script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
-</head>
-<body>
-<div id="aplayer"></div>
-<script>
-        function getLrc(songid) {
-            this.url = `https://music.163.com/api/song/media?id=${songid}&callback=getPic`;
 
-            function createScript() {
-                let script = document.createElement('script');
-                script.setAttribute('src', url);
-                document.body.appendChild(script);
-                return script;
-            }
-            return new Promise((resolve, reject) => {
-                window['getPic'] = function (data) {
-                    resolve(data)
-                }
-                const script = createScript()
-                script.onerror = function () {
-                    reject('error');
-                }
-            })
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.css" lazyload>
+    <script src="https://cdn.jsdelivr.net/npm/aplayer@1.10.1/dist/APlayer.min.js"></script>
+</head>
+
+<body>
+    <div id="aplayer"></div>
+    <script>
+        function getLrc(songid) {
+            this.url = `https://api.itswincer.com/cloudmusic/media?id=${songid}`;
+            return fetch(url)
         }
         function getDetail(songId) {
-            this.url = `https://api.imjad.cn/cloudmusic/?id=${songId}&type=detail`;
+            this.url = `https://api.itswincer.com/cloudmusic/detail?ids=[${songId}]`;
             return fetch(url);
         }
 
@@ -37,36 +23,44 @@
             return url.searchParams.get('id')
         }
 
-        var songId = getQuery();
-        Promise.all([getLrc(songId), getDetail(songId)])
-            .then(resps => {
-                [lrc, detail] = [resps[0].lyric, resps[1].text()];
-                detail.then(resp => {
-                    if (!lrc) {
-                        lrc = '[00:00.00]纯音乐，请欣赏\n'
-                    }
-                    resp = JSON.parse(resp)
-                    new APlayer({
-                        container: document.querySelector("#aplayer"),
-                        narrow: false,
-                        autoplay: false,
-                        showlrc: 3,
-                        mutex: true,
-                        lrcType: 1,
-                        theme: "#ad7a86",
-                        music: [{
-                            title: resp.songs[0].name,
-                            author: resp.songs[0].ar[0].name,
-                            url: `https://api.imjad.cn/cloudmusic/?id=${songId}&raw=true`,
-                            pic: resp.songs[0].al.picUrl + '?param=130y130',
-                            lrc: lrc,
-                        }]
-                    })
-                })
+        function createPlayer(detail) {
+            new APlayer({
+                container: document.querySelector("#aplayer"),
+                narrow: false,
+                autoplay: false,
+                showlrc: 3,
+                mutex: true,
+                lrcType: 1,
+                theme: "#ad7a86",
+                music: [{
+                    title: detail.songs[0].name,
+                    author: detail.songs[0].artists[0].name,
+                    url: `https://music.163.com/song/media/outer/url?id=${songId}.mp3`,
+                    pic: detail.songs[0].album.picUrl + '?param=130y130',
+                    lrc: detail.lrc,
+                }]
             })
+        }
+
+        const songId = getQuery();
+
+        Promise.all([getLrc(songId), getDetail(songId)])
+            .then(async (resps) => {
+                let [lrc, detail] = [await resps[0].text(), await resps[1].text()];
+                [lrc, detail] = [JSON.parse(lrc), JSON.parse(detail)]
+                if (lrc.nolyric) {
+                    lrc['lyric'] = '[00:00.00]纯音乐，请欣赏\n';
+                }
+                detail['lrc'] = lrc.lyric
+                createPlayer(detail)
+            })
+        window.addEventListener('load', function () {
+            parent.window.document.querySelector('#music').style.height = '116px';
+        })
     </script>
 </body>
 <script>
 
 </script>
+
 </html>
