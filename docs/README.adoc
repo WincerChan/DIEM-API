@@ -1,0 +1,11 @@
+= DIEM API
+WincerChan
+
+image:https://img.shields.io/circleci/project/github/WincerChan/Meme-generator.svg?style=flat-square[CircleCI, link=https://circleci.com/gh/WincerChan/Hitokoto/tree/master]
+image:https://img.shields.io/badge/License-GPL%20v3-blue.svg?style=flat-square[License: GPL v3, https://www.gnu.org/licenses/gpl-3.0]
+image:https://img.shields.io/github/languages/code-size/WincerChan/Hitokoto.svg?style=flat-square[GitHub code size in bytes]
+
+
+目前系统有两条 API：一言（Hitokoto）与网易云音乐（Cloudmusic）。有关两条 API 的具体信息请移步至 https://api.itswincer.com[API 的文档]（文档包含展示及测试用例，GitHub 无法展示）。
+
+
