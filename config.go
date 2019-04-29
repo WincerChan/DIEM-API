@@ -8,13 +8,18 @@ import (
 	"net/http"
 	"os"
 	"syscall"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // HITOKOTOAMOUNT is Number of databases
 var HITOKOTOAMOUNT int64
-var db *sql.DB
+var db, tkDB, reqDB *sqlx.DB
 var err error
 var file *os.File
+
+// FormatMap xxxxx
+var FormatMap map[string]HTTPFormat
 
 // MysqlCONF is pwd and user
 type MysqlCONF struct {
@@ -22,13 +27,27 @@ type MysqlCONF struct {
 	Password string
 }
 
+// MakeReturnMap xxxxxxx
+func MakeReturnMap() {
+	FormatMap = make(map[string]HTTPFormat)
+	FormatMap["js"] = HTTPFormat{Charset: "text/javascript; charset=", Text: "var hitokoto=\"%s——「%s」\";var dom=document.querySelector('.hitokoto');Array.isArray(dom)?dom[0].innerText=hitokoto:dom.innerText=hitokoto;"}
+	FormatMap["json"] = HTTPFormat{Charset: "application/json; charset=", Text: "{\"hitokoto\": \"%s\", \"source\": \"%s\"}"}
+	FormatMap["text"] = HTTPFormat{Charset: "text/plain; charset=", Text: "%s——「%s」"}
+}
 func initHitokotoDB() {
-	file, _ := os.Open("config.json")
+	// file, _ := os.Open("/root/api/config.json")
+	file, _ := os.Open("./config.json")
 	decoder := json.NewDecoder(file)
 	config := MysqlCONF{}
 	err := decoder.Decode(&config)
 	url := fmt.Sprintf("%s:%s@/hitokoto?charset=utf8", config.User, config.Password)
-	db, err = sql.Open("mysql", url)
+	tkURL := fmt.Sprintf("%s:%s@/THINKS?charset=utf8&parseTime=true", config.User, config.Password)
+	reqURL := fmt.Sprintf("%s:%s@/apidata?charset=utf8", config.User, config.Password)
+	// db, err = sql.Open("mysql", url)
+	db, err = sqlx.Connect("mysql", url)
+	tkDB, err = sqlx.Connect("mysql", tkURL)
+	reqDB, err = sqlx.Connect("mysql", reqURL)
+	// fmt.Println(reflect.TypeOf(b))
 	checkErr(err)
 	err1 := db.QueryRow("SELECT COUNT(id) FROM main;").Scan(&HITOKOTOAMOUNT)
 	checkErr(err1)
@@ -60,4 +79,10 @@ func checkErr(err error) {
 		handleError("connectError")
 		log.Println(err)
 	}
+}
+
+func setCheating(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "text/javascript; charset=utf-8")
+	w.WriteHeader(http.StatusForbidden)
+	fmt.Fprintf(w, "%s", "{'cheating': true}")
 }

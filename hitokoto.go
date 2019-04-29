@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/rand"
-	"encoding/json"
 	"fmt"
 	"log"
 	"math/big"
@@ -10,10 +9,10 @@ import (
 	"strconv"
 )
 
-// Hit database composition
-type Hit struct {
-	Hitokoto string `json:"hitokoto"` // Hitokoto sentence
-	Source   string `json:"source"`   // Hitokoto source
+// HTTPFormat xxxx
+type HTTPFormat struct {
+	Charset string `json:"charset"`
+	Text    string `json:"text"`
 }
 
 // query
@@ -49,7 +48,11 @@ func HasLength(length string) {
 }
 
 // GenRandomInt to gen a random int
-func GenRandomInt() {
+func GenRandomInt(length string) {
+	if length != "" {
+		HasLength(length)
+		return
+	}
 	nBig, err := rand.Int(rand.Reader, big.NewInt(HITOKOTOAMOUNT))
 	n := nBig.Int64()
 	err = db.QueryRow("SELECT hitokoto, source FROM main LIMIT ?, 1;", n).Scan(&hito, &source)
@@ -58,54 +61,32 @@ func GenRandomInt() {
 
 // Hitokoto handle function
 func Hitokoto(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.URL.Path)
+	setReqHeader(r)
 	// get params
 	r.ParseForm()
 	encode := r.Form.Get("encode")
 	length := r.Form.Get("length")
-	// if url param have callback then will ignore encode
 	callback := r.Form.Get("callback")
 	charset := r.Form.Get("charset")
 	if charset == "gbk" {
 	} else {
 		charset = "utf-8"
 	}
-	log.Println(r.URL.Path)
-
-	if length != "" {
-		HasLength(length)
-	} else {
-		GenRandomInt()
-	}
+	// fetch data
+	GenRandomInt(length)
 	// hasCallback is return data
-	hasCallback := func() {
-		if callback != "" {
-			hs := &Hit{hito, source}
-			fmtJSON, _ := json.Marshal(hs)
-			w.Header().Set("Content-Type", "text/javascript; charset="+charset)
-			fmt.Fprintf(w, "%s(%s);", callback, fmtJSON)
-			return
-		}
-		switch encode {
-		case "js":
-			content = fmt.Sprintf("%s\\n——「%s」", hito, source)
-			w.Header().Set("Content-Type", "text/javascript; charset="+charset)
-			fmt.Fprintf(w, "var hitokoto=\"%s\";var dom=document.querySelector('.hitokoto');Array.isArray(dom)?dom[0].innerText=hitokoto:dom.innerText=hitokoto;", content)
-		case "json":
-			hs := &Hit{
-				hito,
-				source,
-			}
-			fmtJSON, _ := json.Marshal(hs)
-			w.Header().Set("Content-Type", "application/json; charset="+charset)
-			fmt.Fprintf(w, "%s", string(fmtJSON))
-		case "text":
-			w.Header().Set("Content-Type", "text/plain; charset="+charset)
-			fmt.Fprintf(w, "%s", hito)
-		default:
-			w.Header().Set("Content-Type", "text/plain; charset="+charset)
-			content = fmt.Sprintf("%s——「%s」", hito, source)
-			fmt.Fprintf(w, "%s", content)
-		}
+	w.Header().Set("Content-Type", FormatMap["text"].Charset+charset)
+	content = fmt.Sprintf(FormatMap["text"].Text, hito, source)
+	if text, ok := FormatMap[encode]; ok {
+		w.Header().Set("Content-Type", text.Charset+charset)
+		content = fmt.Sprintf(text.Text, hito, source)
 	}
-	hasCallback()
+	// if url param have callback then will ignore encode
+	if callback != "" {
+		w.Header().Set("Content-Type", "text/javascript; charset="+charset)
+		content = fmt.Sprintf("%s({\"hitokoto\": \"%s\", \"source\": \"%s\"})", callback, hito, source)
+	}
+	fmt.Fprint(w, content)
+
 }
