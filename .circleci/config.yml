@@ -13,6 +13,7 @@ jobs:
           name: Build
           command: |
             go get -u github.com/go-sql-driver/mysql
+            go get -u github.com/jmoiron/sqlx
             go build -o main
       - save_cache:
           key: hitokoto-v1-{{ checksum "config_sample.json" }}
@@ -31,8 +32,8 @@ jobs:
           command: |
             mkdir -p ~/.ssh
             touch ~/.ssh/known_hosts
-            { ssh-keyscan $SSH_IP 2> /dev/null; } >> ~/.ssh/known_hosts
-            scp main $SSH_USER@$SSH_IP:/root/API/main
+            #{ ssh-keyscan $SSH_IP 2> /dev/null; } >> ~/.ssh/known_hosts
+            #scp main $SSH_USER@$SSH_IP:/root/API/main
 
 workflows:
   version: 2
