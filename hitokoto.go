@@ -36,8 +36,8 @@ func handleError(errorType string) {
 	}
 }
 
-// HasLength if url param has length
-func HasLength(length string) {
+// FetchAsLength if url param has length
+func FetchAsLength(length string) {
 	lengthInt, err := strconv.Atoi(length)
 	if err != nil || lengthInt < 5 {
 		handleError("invalidLengthError")
@@ -47,10 +47,10 @@ func HasLength(length string) {
 	checkErr(err1)
 }
 
-// GenRandomInt to gen a random int
-func GenRandomInt(length string) {
+// FetchRandomOne to gen a random int
+func FetchRandomOne(length string) {
 	if length != "" {
-		HasLength(length)
+		FetchAsLength(length)
 		return
 	}
 	nBig, err := rand.Int(rand.Reader, big.NewInt(HITOKOTOAMOUNT))
@@ -69,24 +69,26 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 	length := r.Form.Get("length")
 	callback := r.Form.Get("callback")
 	charset := r.Form.Get("charset")
-	if charset == "gbk" {
-	} else {
+	if charset != "gbk" {
 		charset = "utf-8"
 	}
 	// fetch data
-	GenRandomInt(length)
+	FetchRandomOne(length)
 	// hasCallback is return data
 	w.Header().Set("Content-Type", FormatMap["text"].Charset+charset)
+	// The value that needs to be returned
 	content = fmt.Sprintf(FormatMap["text"].Text, hito, source)
+	// set content to encode format
 	if text, ok := FormatMap[encode]; ok {
 		w.Header().Set("Content-Type", text.Charset+charset)
 		content = fmt.Sprintf(text.Text, hito, source)
 	}
-	// if url param have callback then will ignore encode
+	// if url params have callback then will ignore encode
 	if callback != "" {
 		w.Header().Set("Content-Type", "text/javascript; charset="+charset)
 		content = fmt.Sprintf("%s({\"hitokoto\": \"%s\", \"source\": \"%s\"})", callback, hito, source)
 	}
+	// output content
 	fmt.Fprint(w, content)
 
 }
