@@ -62,7 +62,7 @@ func FetchRandomOne(length string) {
 // Hitokoto handle function
 func Hitokoto(w http.ResponseWriter, r *http.Request) {
 	log.Println(r.URL.Path)
-	setReqHeader(r)
+	// setReqHeader(r)
 	// get params
 	r.ParseForm()
 	encode := r.Form.Get("encode")
