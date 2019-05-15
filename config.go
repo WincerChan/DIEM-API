@@ -73,10 +73,14 @@ func DisallowMethod(w http.ResponseWriter, allow string, method string) bool {
 func checkErr(err error) {
 	switch {
 	case err == sql.ErrNoRows:
-		handleError("queryError")
+		// handleError("queryError")
+		hito = "哦~"
+		source = "袴田日向"
 		log.Println("None Query")
 	case err != nil:
-		handleError("connectError")
+		// handleError("connectError")
+		hito = "哦~"
+		source = "袴田日向"
 		log.Println(err)
 	}
 }
