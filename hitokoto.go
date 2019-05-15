@@ -25,26 +25,16 @@ func Redirect301(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/hitokoto/v2/", http.StatusMovedPermanently)
 }
 
-func handleError(errorType string) {
-	switch errorType {
-	case "invalidLengthError":
-		hito = "length 参数须为数字且大于 5 哦！"
-		source = "Tips"
-	default:
-		hito = "哦~"
-		source = "袴田日向"
-	}
-}
-
 // FetchAsLength if url param has length
 func FetchAsLength(length string) {
 	lengthInt, err := strconv.Atoi(length)
-	if err != nil || lengthInt < 5 {
-		handleError("invalidLengthError")
-		return
+	if err != nil || lengthInt < 5 || int64(lengthInt) > HITOKOTOAMOUNT {
+		hito = fmt.Sprintf("length 参数须为数字且大于 5 小于 %d 哦！", HITOKOTOAMOUNT)
+		source = "Tips"
+	} else {
+		err1 := db.QueryRow("SELECT hitokoto, source FROM main WHERE LENGTH(hitokoto) < ? ORDER BY RAND() LiMIT 1;", length).Scan(&hito, &source)
+		checkErr(err1)
 	}
-	err1 := db.QueryRow("SELECT hitokoto, source FROM main WHERE LENGTH(hitokoto) < ? ORDER BY RAND() LiMIT 1;", length).Scan(&hito, &source)
-	checkErr(err1)
 }
 
 // FetchRandomOne to gen a random int
