@@ -8,4 +8,15 @@ image:https://img.shields.io/github/languages/code-size/WincerChan/Hitokoto.svg?
 
 目前系统有两条 API：一言（Hitokoto）与网易云音乐（Cloudmusic）。有关两条 API 的具体信息请移步至 https://api.itswincer.com[API 的文档]（文档包含展示及测试用例，GitHub 无法展示）。
 
+== 部署
+
+[source,sh]
+----
+./server prod --config=config.json # <1>
+./server dev --config=config.json # <2>
+----
+<1> 生产环境
+<2> 开发环境
+
+其中生产环境会把输出放入 debug.log 文件中。
 
