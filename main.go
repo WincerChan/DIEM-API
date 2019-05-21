@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -12,6 +13,10 @@ import (
 func main() {
 	configPath := flag.String("config", "config.json", "MySQL config file.")
 	initHitokotoDB(*configPath)
+	if len(os.Args) <= 1 {
+		fmt.Println("No enough arguments.")
+		os.Exit(1)
+	}
 	switch os.Args[1] {
 	case "prod":
 		initHitokotoDB(*configPath)
