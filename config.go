@@ -34,9 +34,8 @@ func MakeReturnMap() {
 	FormatMap["json"] = HTTPFormat{Charset: "application/json; charset=", Text: "{\"hitokoto\": \"%s\", \"source\": \"%s\"}"}
 	FormatMap["text"] = HTTPFormat{Charset: "text/plain; charset=", Text: "%s——「%s」"}
 }
-func initHitokotoDB() {
-	// file, _ := os.Open("/root/api/config.json")
-	file, _ := os.Open("./config.json")
+func initHitokotoDB(filename string) {
+	file, _ := os.Open(filename)
 	decoder := json.NewDecoder(file)
 	config := MysqlCONF{}
 	err := decoder.Decode(&config)
