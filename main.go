@@ -1,14 +1,25 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
 func main() {
-	initHitokotoDB()
+	configPath := flag.String("config", "config.json", "MySQL config file.")
+	initHitokotoDB(*configPath)
+	switch os.Args[1] {
+	case "prod":
+		initHitokotoDB(*configPath)
+		initLogFile()
+	case "dev":
+		initHitokotoDB(*configPath)
+	}
+	// initHitokotoDB()
 	// initLogFile()
 	MakeReturnMap()
 
