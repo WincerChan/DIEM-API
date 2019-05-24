@@ -17,6 +17,7 @@ var HITOKOTOAMOUNT int64
 var db, tkDB, reqDB *sqlx.DB
 var err error
 var file *os.File
+var config MysqlCONF
 
 // FormatMap xxxxx
 var FormatMap map[string]HTTPFormat
@@ -25,6 +26,7 @@ var FormatMap map[string]HTTPFormat
 type MysqlCONF struct {
 	User     string
 	Password string
+	Port     string
 }
 
 // MakeReturnMap xxxxxxx
@@ -37,7 +39,7 @@ func MakeReturnMap() {
 func initHitokotoDB(filename string) {
 	file, _ := os.Open(filename)
 	decoder := json.NewDecoder(file)
-	config := MysqlCONF{}
+	config = MysqlCONF{}
 	err := decoder.Decode(&config)
 	url := fmt.Sprintf("%s:%s@/hitokoto?charset=utf8", config.User, config.Password)
 	tkURL := fmt.Sprintf("%s:%s@/THINKS?charset=utf8&parseTime=true", config.User, config.Password)
