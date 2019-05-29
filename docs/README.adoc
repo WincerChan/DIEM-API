@@ -12,11 +12,13 @@ image:https://img.shields.io/github/languages/code-size/WincerChan/Hitokoto.svg?
 
 [source,sh]
 ----
-./server prod --config=config.json # <1>
-./server dev --config=config.json # <2>
+go build -o server # <1>
+./server prod --config=config.json # <2>
+./server dev --config=config.json # <3>
 ----
-<1> 生产环境
-<2> 开发环境
+<1> 编译成二进制
+<2> 生产环境
+<3> 开发环境
 
 其中生产环境会把输出放入 debug.log 文件中。
 
