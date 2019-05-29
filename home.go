@@ -1,3 +1,5 @@
+// +build discard
+
 package main
 
 import (

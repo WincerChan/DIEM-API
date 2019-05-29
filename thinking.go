@@ -1,7 +1,7 @@
+// +build discard
+
 package main
 
-// This file has been discarded
-// This file has been discarded
 // This file has been discarded
 import (
 	"encoding/json"
