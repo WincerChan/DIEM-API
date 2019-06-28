@@ -10,6 +10,8 @@ image:https://img.shields.io/github/languages/code-size/WincerChan/Hitokoto.svg?
 
 == 部署
 
+clone 本仓库并在 `config.json` 填入数据库的用户名、密码。
+
 [source,sh]
 ----
 go build -o server # <1>
