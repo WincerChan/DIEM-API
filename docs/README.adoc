@@ -10,13 +10,13 @@ image:https://img.shields.io/github/languages/code-size/WincerChan/Hitokoto.svg?
 
 == 部署
 
-clone 本仓库并在 `config.json` 填入数据库的用户名、密码。
+clone 本仓库并在 `config.yaml` 填入 MySQL 的用户名、密码，*Redis 需载入 https://github.com/brandur/redis-cell[redis-cell] 模块*。
 
 [source,sh]
 ----
 go build -o server # <1>
-./server prod --config=config.json # <2>
-./server dev --config=config.json # <3>
+./server prod --config=config.yaml # <2>
+./server dev --config=config.yaml # <3>
 ----
 <1> 编译成二进制
 <2> 生产环境
