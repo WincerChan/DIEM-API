@@ -51,32 +51,41 @@ func FetchRandomOne(length string) {
 
 // Hitokoto handle function
 func Hitokoto(w http.ResponseWriter, r *http.Request) {
-	log.Println(r.URL.Path)
-	// setReqHeader(r)
-	// get params
-	r.ParseForm()
-	encode := r.Form.Get("encode")
-	length := r.Form.Get("length")
-	callback := r.Form.Get("callback")
-	charset := r.Form.Get("charset")
-	if charset != "gbk" {
-		charset = "utf-8"
-	}
-	// fetch data
-	FetchRandomOne(length)
-	// hasCallback is return data
-	w.Header().Set("Content-Type", FormatMap["text"].Charset+charset)
-	// The value that needs to be returned
-	content = fmt.Sprintf(FormatMap["text"].Text, hito, source)
-	// set content to encode format
-	if text, ok := FormatMap[encode]; ok {
-		w.Header().Set("Content-Type", text.Charset+charset)
-		content = fmt.Sprintf(text.Text, hito, source)
-	}
-	// if url params have callback then will ignore encode
-	if callback != "" {
-		w.Header().Set("Content-Type", "text/javascript; charset="+charset)
-		content = fmt.Sprintf("%s({\"hitokoto\": \"%s\", \"source\": \"%s\"})", callback, hito, source)
+	ret := IsLimited(r)
+	w.Header().Set("X-RateLimit-Limit", strconv.FormatInt(ret[1].(int64), 10))
+	w.Header().Set("X-RateLimit-Remaining", strconv.FormatInt(ret[2].(int64), 10))
+	w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(ret[4].(int64), 10))
+	if ret[0].(int64) == 1 {
+		content = "{\"result\": \"Your IP requests is frequently.\"}"
+	} else {
+		log.Println(r.URL.Path)
+		// setReqHeader(r)
+		// get params
+		r.ParseForm()
+		encode := r.Form.Get("encode")
+		length := r.Form.Get("length")
+		callback := r.Form.Get("callback")
+		charset := r.Form.Get("charset")
+		if charset != "gbk" {
+			charset = "utf-8"
+		}
+		// fetch data
+		FetchRandomOne(length)
+		// hasCallback is return data
+		w.Header().Set("Content-Type", FormatMap["text"].Charset+charset)
+		// The value that needs to be returned
+		content = fmt.Sprintf(FormatMap["text"].Text, hito, source)
+		// set content to encode format
+		if text, ok := FormatMap[encode]; ok {
+			w.Header().Set("Content-Type", text.Charset+charset)
+			content = fmt.Sprintf(text.Text, hito, source)
+		}
+		// if url params have callback then will ignore encode
+		if callback != "" {
+			w.Header().Set("Content-Type", "text/javascript; charset="+charset)
+			content = fmt.Sprintf("%s({\"hitokoto\": \"%s\", \"source\": \"%s\"})", callback, hito, source)
+		}
+
 	}
 	// output content
 	fmt.Fprint(w, content)

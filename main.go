@@ -11,9 +11,10 @@ import (
 )
 
 func main() {
-	configPath := flag.String("config", "config.json", "MySQL config file.")
+	configPath := flag.String("config", "config.yaml", "Config file.")
 	if len(os.Args) <= 1 {
 		fmt.Println("No enough arguments.")
+		fmt.Println("Use: ./server [prod|dev]")
 		os.Exit(1)
 	}
 	switch os.Args[1] {
@@ -21,13 +22,14 @@ func main() {
 		initLogFile()
 	case "dev":
 	}
-	initHitokotoDB(*configPath)
+	initConfig(*configPath)
+	initHitokotoDB()
+	initRedis()
 	MakeReturnMap()
 
 	http.HandleFunc("/hitokoto/v2/", Hitokoto)
 	http.HandleFunc("/hitokoto/get", Redirect301)
-	// http.HandleFunc("/thinking/v1/", HandleThinkReq)
-	log.Println("listening in " + config.Port + "port.")
-	err := http.ListenAndServe(config.Port, nil)
+	log.Println("listening in " + config.ListenPort + "port.")
+	err := http.ListenAndServe(config.ListenPort, nil)
 	checkErr(err)
 }

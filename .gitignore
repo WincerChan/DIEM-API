@@ -16,5 +16,7 @@
 *.db
 *.log
 deploy
+server
 id_rsa
 .directory
+

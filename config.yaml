@@ -1,0 +1,10 @@
+mysql:
+  user: wincer
+  password: holy-fuck
+
+redis:
+  address: localhost:6379
+  password: you-need
+  db: 0
+
+listenport: :5200
