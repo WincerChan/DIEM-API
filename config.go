@@ -2,7 +2,11 @@ package main
 
 import (
 	"database/sql"
-	"encoding/json"
+	"io/ioutil"
+
+	"github.com/gomodule/redigo/redis"
+	"gopkg.in/yaml.v2"
+
 	"fmt"
 	"log"
 	"net/http"
@@ -14,19 +18,25 @@ import (
 
 // HITOKOTOAMOUNT is Number of databases
 var HITOKOTOAMOUNT int64
-var db, tkDB, reqDB *sqlx.DB
+var db *sqlx.DB
 var err error
-var file *os.File
-var config MysqlCONF
+var conn redis.Conn
 
 // FormatMap xxxxx
 var FormatMap map[string]HTTPFormat
+var config *UserConfig
 
-// MysqlCONF is pwd and user
-type MysqlCONF struct {
-	User     string
-	Password string
-	Port     string
+type UserConfig struct {
+	MySQL struct {
+		User     string `yaml:"user"`
+		Password string `yaml:"password"`
+	}
+	Redis struct {
+		Address  string `yaml:"address"`
+		Password string `yaml:"password"`
+		DB       int    `yaml:"db"`
+	}
+	ListenPort string `yaml:"listenport"`
 }
 
 // MakeReturnMap xxxxxxx
@@ -36,26 +46,35 @@ func MakeReturnMap() {
 	FormatMap["json"] = HTTPFormat{Charset: "application/json; charset=", Text: "{\"hitokoto\": \"%s\", \"source\": \"%s\"}"}
 	FormatMap["text"] = HTTPFormat{Charset: "text/plain; charset=", Text: "%s——「%s」"}
 }
-func initHitokotoDB(filename string) {
-	file, _ := os.Open(filename)
-	decoder := json.NewDecoder(file)
-	config = MysqlCONF{}
-	err := decoder.Decode(&config)
-	url := fmt.Sprintf("%s:%s@/hitokoto?charset=utf8", config.User, config.Password)
-	tkURL := fmt.Sprintf("%s:%s@/THINKS?charset=utf8&parseTime=true", config.User, config.Password)
-	reqURL := fmt.Sprintf("%s:%s@/apidata?charset=utf8", config.User, config.Password)
-	// db, err = sql.Open("mysql", url)
+
+func initConfig(filename string) {
+	config = new(UserConfig)
+	yamlFile, _ := ioutil.ReadFile("./config.yaml")
+	_ = yaml.Unmarshal(yamlFile, config)
+}
+
+func initRedis() {
+	conn, _ = redis.Dial("tcp", config.Redis.Address, redis.DialDatabase(config.Redis.DB))
+	if config.Redis.Password != "" {
+		conn.Do("auth", config.Redis.Password)
+	}
+	_, err := conn.Do("ping")
+	checkErr(err)
+	ret, _ := redis.Values(conn.Do("CL.THROTTLE", "xforwared", "100", "100", "3600"))
+	fmt.Println(ret)
+
+}
+
+func initHitokotoDB() {
+	url := fmt.Sprintf("%s:%s@/hitokoto?charset=utf8", config.MySQL.User, config.MySQL.Password)
 	db, err = sqlx.Connect("mysql", url)
-	tkDB, err = sqlx.Connect("mysql", tkURL)
-	reqDB, err = sqlx.Connect("mysql", reqURL)
-	// fmt.Println(reflect.TypeOf(b))
 	checkErr(err)
 	err1 := db.QueryRow("SELECT COUNT(id) FROM main;").Scan(&HITOKOTOAMOUNT)
 	checkErr(err1)
 }
 
 func initLogFile() {
-	file, err = os.OpenFile("debug.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0640)
+	file, _ := os.OpenFile("debug.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0640)
 	defer file.Close()
 	syscall.Dup2(int(file.Fd()), 1)
 	syscall.Dup2(int(file.Fd()), 2)
@@ -69,6 +88,17 @@ func DisallowMethod(w http.ResponseWriter, allow string, method string) bool {
 		return true
 	}
 	return false
+}
+
+func IsLimited(r *http.Request) []interface{} {
+	header := r.Header
+	xforwared := header.Get("X-Forwarded-For")
+	if xforwared == "" {
+		xforwared = "NoForwaredIP"
+	}
+	ret, _ := redis.Values(conn.Do("CL.THROTTLE", xforwared, "35", "36", "360"))
+	fmt.Println(ret)
+	return ret
 }
 
 func checkErr(err error) {
