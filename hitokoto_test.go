@@ -10,7 +10,9 @@ import (
 type ReqTest func(w http.ResponseWriter, r *http.Request)
 
 func init() {
-	initHitokotoDB("config.json")
+	initConfig("./config.yaml")
+	initHitokotoDB()
+	initRedis()
 	MakeReturnMap()
 }
 

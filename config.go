@@ -60,9 +60,6 @@ func initRedis() {
 	}
 	_, err := conn.Do("ping")
 	checkErr(err)
-	ret, _ := redis.Values(conn.Do("CL.THROTTLE", "xforwared", "100", "100", "3600"))
-	fmt.Println(ret)
-
 }
 
 func initHitokotoDB() {
@@ -97,7 +94,6 @@ func IsLimited(r *http.Request) []interface{} {
 		xforwared = "NoForwaredIP"
 	}
 	ret, _ := redis.Values(conn.Do("CL.THROTTLE", xforwared, "35", "36", "360"))
-	fmt.Println(ret)
 	return ret
 }
 
