@@ -1,12 +1,15 @@
 package main
 
 import (
-	"crypto/rand"
+	"database/sql/driver"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
-	"math/big"
 	"net/http"
 	"strconv"
+
+	_ "github.com/lib/pq"
 )
 
 // HTTPFormat xxxx
@@ -15,39 +18,28 @@ type HTTPFormat struct {
 	Text    string `json:"text"`
 }
 
+type Content struct {
+	Source string `json:"source"`
+	Hito   string `json:"hitokoto"`
+}
+
+func (c Content) Value() (driver.Value, error) {
+	return json.Marshal(c)
+}
+
+func (c *Content) Scan(value interface{}) error {
+	b, ok := value.([]byte)
+	if !ok {
+		return errors.New("type assertion to []byte failed")
+	}
+	return json.Unmarshal(b, &c)
+}
+
 // query
+var cnt *Content
 var hito string
 var source string
 var content string
-
-// Redirect301 old api
-func Redirect301(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "/hitokoto/v2/", http.StatusMovedPermanently)
-}
-
-// FetchAsLength if url param has length
-func FetchAsLength(length string) {
-	lengthInt, err := strconv.Atoi(length)
-	if err != nil || lengthInt < 5 || int64(lengthInt) > HITOKOTOAMOUNT {
-		hito = fmt.Sprintf("length 参数须为数字且大于 5 小于 %d 哦！", HITOKOTOAMOUNT)
-		source = "Tips"
-	} else {
-		err1 := db.QueryRow("SELECT hitokoto, source FROM main WHERE LENGTH(hitokoto) < ? ORDER BY RAND() LiMIT 1;", length).Scan(&hito, &source)
-		checkErr(err1)
-	}
-}
-
-// FetchRandomOne to gen a random int
-func FetchRandomOne(length string) {
-	if length != "" {
-		FetchAsLength(length)
-		return
-	}
-	nBig, err := rand.Int(rand.Reader, big.NewInt(HITOKOTOAMOUNT))
-	n := nBig.Int64()
-	err = db.QueryRow("SELECT hitokoto, source FROM main LIMIT ?, 1;", n).Scan(&hito, &source)
-	checkErr(err)
-}
 
 // Hitokoto handle function
 func Hitokoto(w http.ResponseWriter, r *http.Request) {
@@ -58,6 +50,7 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 	if ret[0].(int64) == 1 {
 		content = "{\"result\": \"Your IP requests is frequently.\"}"
 	} else {
+		cnt := new(Content)
 		log.Println(r.URL.Path)
 		// setReqHeader(r)
 		// get params
@@ -70,20 +63,30 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 			charset = "utf-8"
 		}
 		// fetch data
-		FetchRandomOne(length)
+		if length == "" || len(length) > 3 {
+			db.QueryRow("SELECT RANDOMFETCH($1);", -1).Scan(&cnt)
+		} else {
+			lengthInt, err := strconv.Atoi(length)
+			if err != nil {
+				checkErr(err)
+			} else {
+				db.QueryRow("SELECT RANDOMFETCH($1);", lengthInt).Scan(&cnt)
+			}
+		}
+		cntJSON, _ := cnt.Value()
 		// hasCallback is return data
 		w.Header().Set("Content-Type", FormatMap["text"].Charset+charset)
 		// The value that needs to be returned
-		content = fmt.Sprintf(FormatMap["text"].Text, hito, source)
+		content = fmt.Sprintf(FormatMap["text"].Text, cnt.Hito, cnt.Source)
 		// set content to encode format
 		if text, ok := FormatMap[encode]; ok {
 			w.Header().Set("Content-Type", text.Charset+charset)
-			content = fmt.Sprintf(text.Text, hito, source)
+			content = fmt.Sprintf(text.Text, cnt.Hito, cnt.Source)
 		}
 		// if url params have callback then will ignore encode
 		if callback != "" {
 			w.Header().Set("Content-Type", "text/javascript; charset="+charset)
-			content = fmt.Sprintf("%s({\"hitokoto\": \"%s\", \"source\": \"%s\"})", callback, hito, source)
+			content = fmt.Sprintf("%s(%s)", callback, string(cntJSON.([]byte)))
 		}
 
 	}
