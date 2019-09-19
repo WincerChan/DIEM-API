@@ -93,7 +93,13 @@ func IsLimited(r *http.Request) []interface{} {
 	if xforwared == "" {
 		xforwared = "NoForwaredIP"
 	}
-	ret, _ := redis.Values(conn.Do("CL.THROTTLE", xforwared, "35", "36", "360"))
+	ret, err := redis.Values(conn.Do("CL.THROTTLE", xforwared, "35", "36", "360"))
+	if err != nil {
+		log.Printf("cl error level 1: %s", err)
+		initRedis()
+		ret, err = redis.Values(conn.Do("CL.THROTTLE", xforwared, "35", "36", "360"))
+		log.Printf("cl error level 2: %s", err)
+	}
 	return ret
 }
 

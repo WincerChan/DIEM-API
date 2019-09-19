@@ -47,6 +47,7 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-RateLimit-Limit", strconv.FormatInt(ret[1].(int64), 10))
 	w.Header().Set("X-RateLimit-Remaining", strconv.FormatInt(ret[2].(int64), 10))
 	w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(ret[4].(int64), 10))
+	log.Println(r.Header.Get("X-Forwarded-For"))
 	if ret[0].(int64) == 1 {
 		content = "{\"result\": \"Your IP requests is frequently.\"}"
 	} else {
