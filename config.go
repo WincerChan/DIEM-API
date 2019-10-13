@@ -10,8 +10,6 @@ import (
 
 	"fmt"
 	"net/http"
-	"os"
-	"syscall"
 )
 
 // HITOKOTOAMOUNT is Number of databases
@@ -60,17 +58,10 @@ func initRedis() {
 }
 
 func initHitokotoDB() {
-	url := fmt.Sprintf("postgres://%s:%s@localhost/api?sslmode=disable", config.Postgres.User, config.Postgres.Password)
+	url := fmt.Sprintf("postgres://%s:%s@localhost/api?sslmode=disable",
+		config.Postgres.User, config.Postgres.Password)
 	db, err = sqlx.Connect("postgres", url)
-	defer db.Close()
 	checkErr(err)
-}
-
-func initLogFile() {
-	file, _ := os.OpenFile("debug.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0640)
-	defer file.Close()
-	syscall.Dup2(int(file.Fd()), 1)
-	syscall.Dup2(int(file.Fd()), 2)
 }
 
 //DisallowMethod is allow current method
