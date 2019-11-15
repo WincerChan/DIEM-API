@@ -28,7 +28,6 @@ func main() {
 	MakeReturnMap()
 
 	http.HandleFunc("/hitokoto/v2/", Hitokoto)
-	http.HandleFunc("/hitokoto/get", Redirect301)
 	log.Println("listening in " + config.ListenPort + "port.")
 	err := http.ListenAndServe(config.ListenPort, nil)
 	checkErr(err)

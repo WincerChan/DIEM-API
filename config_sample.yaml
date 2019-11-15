@@ -1,0 +1,10 @@
+postgres:
+  user: postgres
+  password: sit-fine
+
+redis:
+  address: localhost:6379
+  password: sit-fine
+  db: 0
+
+listenport: :5200

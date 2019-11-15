@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/jmoiron/sqlx"
 	"gopkg.in/yaml.v2"
 
 	"fmt"
@@ -12,8 +13,6 @@ import (
 	"net/http"
 	"os"
 	"syscall"
-
-	"github.com/jmoiron/sqlx"
 )
 
 // HITOKOTOAMOUNT is Number of databases
@@ -27,7 +26,7 @@ var FormatMap map[string]HTTPFormat
 var config *UserConfig
 
 type UserConfig struct {
-	MySQL struct {
+	Postgres struct {
 		User     string `yaml:"user"`
 		Password string `yaml:"password"`
 	}
@@ -63,11 +62,12 @@ func initRedis() {
 }
 
 func initHitokotoDB() {
-	url := fmt.Sprintf("%s:%s@/hitokoto?charset=utf8", config.MySQL.User, config.MySQL.Password)
-	db, err = sqlx.Connect("mysql", url)
+	// db, err := sql.Open("postgres", "postgres://p")
+	url := fmt.Sprintf("postgres://%s:%s@localhost/api?sslmode=disable", config.Postgres.User, config.Postgres.Password)
+	db, err = sqlx.Connect("postgres", url)
 	checkErr(err)
-	err1 := db.QueryRow("SELECT COUNT(id) FROM main;").Scan(&HITOKOTOAMOUNT)
-	checkErr(err1)
+	// err1 := db.QueryRow("SELECT COUNT(id) FROM main;").Scan(&HITOKOTOAMOUNT)
+	// checkErr(err1)
 }
 
 func initLogFile() {
@@ -93,7 +93,13 @@ func IsLimited(r *http.Request) []interface{} {
 	if xforwared == "" {
 		xforwared = "NoForwaredIP"
 	}
-	ret, _ := redis.Values(conn.Do("CL.THROTTLE", xforwared, "35", "36", "360"))
+	ret, err := redis.Values(conn.Do("CL.THROTTLE", xforwared, "35", "36", "360"))
+	if err != nil {
+		log.Printf("cl error level 1: %s", err)
+		initRedis()
+		ret, err = redis.Values(conn.Do("CL.THROTTLE", xforwared, "35", "36", "360"))
+		log.Printf("cl error level 2: %s", err)
+	}
 	return ret
 }
 
@@ -101,13 +107,13 @@ func checkErr(err error) {
 	switch {
 	case err == sql.ErrNoRows:
 		// handleError("queryError")
-		hito = "哦~"
-		source = "袴田日向"
+		cnt.Hito = "哦~"
+		cnt.Source = "袴田日向"
 		log.Println("None Query")
 	case err != nil:
 		// handleError("connectError")
-		hito = "哦~"
-		source = "袴田日向"
+		cnt.Hito = "哦~"
+		cnt.Source = "袴田日向"
 		log.Println(err)
 	}
 }
