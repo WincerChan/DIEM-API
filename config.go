@@ -1,25 +1,22 @@
 package main
 
 import (
-	"database/sql"
 	"io/ioutil"
 
-	"github.com/gomodule/redigo/redis"
+	// "github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v7"
 	"github.com/jmoiron/sqlx"
 	"gopkg.in/yaml.v2"
 
 	"fmt"
-	"log"
 	"net/http"
-	"os"
-	"syscall"
 )
 
 // HITOKOTOAMOUNT is Number of databases
 var HITOKOTOAMOUNT int64
 var db *sqlx.DB
 var err error
-var conn redis.Conn
+var conn *redis.Client
 
 // FormatMap xxxxx
 var FormatMap map[string]HTTPFormat
@@ -53,28 +50,18 @@ func initConfig(filename string) {
 }
 
 func initRedis() {
-	conn, _ = redis.Dial("tcp", config.Redis.Address, redis.DialDatabase(config.Redis.DB))
-	if config.Redis.Password != "" {
-		conn.Do("auth", config.Redis.Password)
-	}
-	_, err := conn.Do("ping")
-	checkErr(err)
+	conn = redis.NewClient(&redis.Options{
+		Addr:     config.Redis.Address,
+		Password: config.Redis.Password,
+		DB:       config.Redis.DB,
+	})
 }
 
 func initHitokotoDB() {
-	// db, err := sql.Open("postgres", "postgres://p")
-	url := fmt.Sprintf("postgres://%s:%s@localhost/api?sslmode=disable", config.Postgres.User, config.Postgres.Password)
+	url := fmt.Sprintf("postgres://%s:%s@localhost/api?sslmode=disable",
+		config.Postgres.User, config.Postgres.Password)
 	db, err = sqlx.Connect("postgres", url)
 	checkErr(err)
-	// err1 := db.QueryRow("SELECT COUNT(id) FROM main;").Scan(&HITOKOTOAMOUNT)
-	// checkErr(err1)
-}
-
-func initLogFile() {
-	file, _ := os.OpenFile("debug.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0640)
-	defer file.Close()
-	syscall.Dup2(int(file.Fd()), 1)
-	syscall.Dup2(int(file.Fd()), 2)
 }
 
 //DisallowMethod is allow current method
@@ -93,28 +80,14 @@ func IsLimited(r *http.Request) []interface{} {
 	if xforwared == "" {
 		xforwared = "NoForwaredIP"
 	}
-	ret, err := redis.Values(conn.Do("CL.THROTTLE", xforwared, "35", "36", "360"))
-	if err != nil {
-		log.Printf("cl error level 1: %s", err)
-		initRedis()
-		ret, err = redis.Values(conn.Do("CL.THROTTLE", xforwared, "35", "36", "360"))
-		log.Printf("cl error level 2: %s", err)
-	}
-	return ret
+	ret, err := conn.Do("CL.THROTTLE", xforwared, "35", "36", "360").Result()
+	checkErr(err)
+	return ret.([]interface{})
 }
 
 func checkErr(err error) {
-	switch {
-	case err == sql.ErrNoRows:
-		// handleError("queryError")
-		cnt.Hito = "哦~"
-		cnt.Source = "袴田日向"
-		log.Println("None Query")
-	case err != nil:
-		// handleError("connectError")
-		cnt.Hito = "哦~"
-		cnt.Source = "袴田日向"
-		log.Println(err)
+	if err != nil {
+		panic(err)
 	}
 }
 

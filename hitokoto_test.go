@@ -29,6 +29,5 @@ func TestHitokoto(t *testing.T) {
 	urlParamsTest(Hitokoto, "/hitokoto/v2/?encode=json")
 	urlParamsTest(Hitokoto, "/hitokoto/v2/?callback=fff&length=4")
 	urlParamsTest(Hitokoto, "/hitokoto/v2/?length=14")
-	urlParamsTest(Redirect301, "/hitokoto/get")
 	//
 }
