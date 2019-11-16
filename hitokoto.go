@@ -11,20 +11,17 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// query
 var hitoinfo *Info
-var hito string
-var source string
-var content string
-var pipe chan string
+var done bool
 
 type Info struct {
 	Source string `json:"source"`
 	Hito   string `json:"hitokoto"`
 }
 
-func (c Info) Value() ([]byte, error) {
-	return json.Marshal(c)
+func (c Info) Value() []byte {
+	result, _ := json.Marshal(c)
+	return result
 }
 
 func (c *Info) Scan(value interface{}) error {
@@ -45,22 +42,22 @@ func setLimitHeader(w http.ResponseWriter, r *http.Request) bool {
 	w.Header().Set("X-RateLimit-Remaining", strconv.FormatInt(ret[2].(int64), 10))
 	w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(ret[4].(int64), 10))
 	if ret[0].(int64) == 1 {
-		content = "{\"result\": \"Your IP requests is frequently.\"}"
+		content := "{\"result\": \"Your IP requests is frequently.\"}"
 		w.Write([]byte(content))
 		return true
 	}
 	return false
 }
 
-func parseParams(r *http.Request) {
+func parseParams(r *http.Request, pipe chan string) {
 	r.ParseForm()
-	pipe <- r.Form.Get("charset")
-	pipe <- r.Form.Get("encode")
 	pipe <- r.Form.Get("length")
 	pipe <- r.Form.Get("callback")
+	pipe <- r.Form.Get("charset")
+	pipe <- r.Form.Get("encode")
 }
 
-func fetchInfo() {
+func fetchInfo(pipe chan string) {
 	lenStr := <-pipe
 	if lenStr == "" || len(lenStr) > 3 {
 		db.QueryRow("SELECT RANDOMFETCH($1);", -1).Scan(&hitoinfo)
@@ -71,13 +68,19 @@ func fetchInfo() {
 	}
 }
 
-func setResponse(w http.ResponseWriter) {
-	var buffer bytes.Buffer
+func makeSTDResponse(w http.ResponseWriter, pipe chan string) {
+	if done {
+		return
+	}
+
 	charset := <-pipe
-	contenttype := ""
 	if "gbk" != charset {
 		charset = "utf-8"
 	}
+
+	var buffer bytes.Buffer
+	var contenttype string
+
 	switch e := <-pipe; e {
 	case "js":
 		contenttype = "text/javascript; charset=" + charset
@@ -102,37 +105,40 @@ func setResponse(w http.ResponseWriter) {
 		buffer.WriteString("——「")
 		buffer.WriteString(hitoinfo.Source)
 		buffer.WriteString("」")
+		break
 	}
 	w.Header().Set("Content-Type", contenttype)
 	w.Write(buffer.Bytes())
 }
 
-func setCallback(w http.ResponseWriter) {
-	json, _ := hitoinfo.Value()
-	var buffer bytes.Buffer
+func makeCallback(w http.ResponseWriter, pipe chan string) {
 	callback := <-pipe
 	if "" == callback {
 		return
 	}
-	contenttype := "text/javascript"
-	w.Header().Set("Content-Type", contenttype)
+
+	w.Header().Set("Content-Type", "text/javascript")
+
+	var buffer bytes.Buffer
 	buffer.WriteString(callback)
 	buffer.WriteString("(")
-	buffer.WriteString(string(json))
+	buffer.WriteString(string(hitoinfo.Value()))
 	buffer.WriteString(")")
 	w.Write(buffer.Bytes())
-
+	done = true
 }
 
 // Hitokoto handle function
 func Hitokoto(w http.ResponseWriter, r *http.Request) {
+	pipe := make(chan string, 4)
+	done = false
 	log.Println(r.URL.Path)
 	isLimited := setLimitHeader(w, r)
 	if isLimited {
 		return
 	}
-	parseParams(r) // parse Params
-	fetchInfo()    // fetch hitokoto info
-	setResponse(w) // set content-type header
-	setCallback(w) // check callback param
+	parseParams(r, pipe)     // parse Params
+	fetchInfo(pipe)          // fetch hitokoto info
+	makeCallback(w, pipe)    // check callback param
+	makeSTDResponse(w, pipe) // make standard response
 }

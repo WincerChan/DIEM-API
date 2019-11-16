@@ -13,7 +13,6 @@ func init() {
 	initConfig("./config.yaml")
 	initHitokotoDB()
 	initRedis()
-	MakeReturnMap()
 }
 
 func TestHitokoto(t *testing.T) {
