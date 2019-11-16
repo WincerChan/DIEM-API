@@ -15,7 +15,6 @@ import (
 var db *sqlx.DB
 var err error
 var conn *redis.Client
-
 var config *UserConfig
 
 type UserConfig struct {
@@ -34,7 +33,6 @@ type UserConfig struct {
 }
 
 func initConfig(filename string) {
-	pipe = make(chan string, 4)
 	config = new(UserConfig)
 	yamlFile, _ := ioutil.ReadFile("./config.yaml")
 	_ = yaml.Unmarshal(yamlFile, config)
