@@ -28,6 +28,7 @@ type UserConfig struct {
 		Password string `yaml:"password"`
 	}
 	Redis struct {
+		Enabled  bool   `yaml:"enabled"`
 		Address  string `yaml:"address"`
 		Password string `yaml:"password"`
 		DB       int    `yaml:"db"`
@@ -74,7 +75,7 @@ func DisallowMethod(w http.ResponseWriter, allow string, method string) bool {
 	return false
 }
 
-func IsLimited(r *http.Request) []interface{} {
+func getRemainingNumbers(r *http.Request) []interface{} {
 	header := r.Header
 	xforwared := header.Get("X-Forwarded-For")
 	if xforwared == "" {

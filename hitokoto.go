@@ -35,6 +35,23 @@ func (c *Content) Scan(value interface{}) error {
 	return json.Unmarshal(b, &c)
 }
 
+func setLimitHeader(w http.ResponseWriter, r *http.Request) bool {
+	// If user do not enable redis-cell limit, just do not check
+	if !config.Redis.Enabled {
+		return false
+	}
+	ret := getRemainingNumbers(r)
+	w.Header().Set("X-RateLimit-Limit", strconv.FormatInt(ret[1].(int64), 10))
+	w.Header().Set("X-RateLimit-Remaining", strconv.FormatInt(ret[2].(int64), 10))
+	w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(ret[4].(int64), 10))
+	if ret[0].(int64) == 1 {
+		content = "{\"result\": \"Your IP requests is frequently.\"}"
+		fmt.Fprintf(w, content)
+		return true
+	}
+	return false
+}
+
 // query
 var cnt *Content
 var hito string
@@ -43,54 +60,49 @@ var content string
 
 // Hitokoto handle function
 func Hitokoto(w http.ResponseWriter, r *http.Request) {
-	ret := IsLimited(r)
-	w.Header().Set("X-RateLimit-Limit", strconv.FormatInt(ret[1].(int64), 10))
-	w.Header().Set("X-RateLimit-Remaining", strconv.FormatInt(ret[2].(int64), 10))
-	w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(ret[4].(int64), 10))
-	log.Println(r.Header.Get("X-Forwarded-For"))
-	if ret[0].(int64) == 1 {
-		content = "{\"result\": \"Your IP requests is frequently.\"}"
-	} else {
-		cnt := new(Content)
-		log.Println(r.URL.Path)
-		// setReqHeader(r)
-		// get params
-		r.ParseForm()
-		encode := r.Form.Get("encode")
-		length := r.Form.Get("length")
-		callback := r.Form.Get("callback")
-		charset := r.Form.Get("charset")
-		if charset != "gbk" {
-			charset = "utf-8"
-		}
-		// fetch data
-		if length == "" || len(length) > 3 {
-			db.QueryRow("SELECT RANDOMFETCH($1);", -1).Scan(&cnt)
-		} else {
-			lengthInt, err := strconv.Atoi(length)
-			if err != nil {
-				checkErr(err)
-			} else {
-				db.QueryRow("SELECT RANDOMFETCH($1);", lengthInt).Scan(&cnt)
-			}
-		}
-		cntJSON, _ := cnt.Value()
-		// hasCallback is return data
-		w.Header().Set("Content-Type", FormatMap["text"].Charset+charset)
-		// The value that needs to be returned
-		content = fmt.Sprintf(FormatMap["text"].Text, cnt.Hito, cnt.Source)
-		// set content to encode format
-		if text, ok := FormatMap[encode]; ok {
-			w.Header().Set("Content-Type", text.Charset+charset)
-			content = fmt.Sprintf(text.Text, cnt.Hito, cnt.Source)
-		}
-		// if url params have callback then will ignore encode
-		if callback != "" {
-			w.Header().Set("Content-Type", "text/javascript; charset="+charset)
-			content = fmt.Sprintf("%s(%s)", callback, string(cntJSON.([]byte)))
-		}
-
+	isLimited := setLimitHeader(w, r)
+	if isLimited {
+		return
 	}
+	cnt := new(Content)
+	log.Println(r.URL.Path)
+	// setReqHeader(r)
+	// get params
+	r.ParseForm()
+	encode := r.Form.Get("encode")
+	length := r.Form.Get("length")
+	callback := r.Form.Get("callback")
+	charset := r.Form.Get("charset")
+	if charset != "gbk" {
+		charset = "utf-8"
+	}
+	// fetch data
+	if length == "" || len(length) > 3 {
+		db.QueryRow("SELECT RANDOMFETCH($1);", -1).Scan(&cnt)
+	} else {
+		lengthInt, err := strconv.Atoi(length)
+		if err != nil {
+			checkErr(err)
+		} else {
+			db.QueryRow("SELECT RANDOMFETCH($1);", lengthInt).Scan(&cnt)
+		}
+	}
+	cntJSON, _ := cnt.Value()
+	// hasCallback is return data
+	w.Header().Set("Content-Type", FormatMap["text"].Charset+charset)
+	// The value that needs to be returned
+	content = fmt.Sprintf(FormatMap["text"].Text, cnt.Hito, cnt.Source)
+	// set content to encode format
+	if text, ok := FormatMap[encode]; ok {
+		w.Header().Set("Content-Type", text.Charset+charset)
+		content = fmt.Sprintf(text.Text, cnt.Hito, cnt.Source)
+	}
+	// if url params have callback then will ignore encode
+	if callback != "" {
+		w.Header().Set("Content-Type", "text/javascript; charset="+charset)
+		content = fmt.Sprintf("%s(%s)", callback, string(cntJSON.([]byte)))
+	}
+
 	// output content
 	fmt.Fprint(w, content)
 

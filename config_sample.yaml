@@ -6,5 +6,6 @@ redis:
   address: localhost:6379
   password: sit-fine
   db: 0
+  enabled: true
 
 listenport: :5200
