@@ -141,4 +141,5 @@ func Hitokoto(w http.ResponseWriter, r *http.Request) {
 	fetchInfo(pipe)          // fetch hitokoto info
 	makeCallback(w, pipe)    // check callback param
 	makeSTDResponse(w, pipe) // make standard response
+	close(pipe)
 }
