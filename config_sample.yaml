@@ -1,6 +1,7 @@
 postgres:
   user: postgres
   password: sit-fine
+  database: api
 
 redis:
   address: localhost:6379

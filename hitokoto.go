@@ -1,10 +1,9 @@
 package main
 
 import (
-	"database/sql/driver"
+	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -12,22 +11,23 @@ import (
 	_ "github.com/lib/pq"
 )
 
-// HTTPFormat xxxx
-type HTTPFormat struct {
-	Charset string `json:"charset"`
-	Text    string `json:"text"`
-}
+// query
+var hitoinfo *Info
+var hito string
+var source string
+var content string
+var pipe chan string
 
-type Content struct {
+type Info struct {
 	Source string `json:"source"`
 	Hito   string `json:"hitokoto"`
 }
 
-func (c Content) Value() (driver.Value, error) {
+func (c Info) Value() ([]byte, error) {
 	return json.Marshal(c)
 }
 
-func (c *Content) Scan(value interface{}) error {
+func (c *Info) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
 		return errors.New("type assertion to []byte failed")
@@ -46,64 +46,93 @@ func setLimitHeader(w http.ResponseWriter, r *http.Request) bool {
 	w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(ret[4].(int64), 10))
 	if ret[0].(int64) == 1 {
 		content = "{\"result\": \"Your IP requests is frequently.\"}"
-		fmt.Fprintf(w, content)
+		w.Write([]byte(content))
 		return true
 	}
 	return false
 }
 
-// query
-var cnt *Content
-var hito string
-var source string
-var content string
+func parseParams(r *http.Request) {
+	r.ParseForm()
+	pipe <- r.Form.Get("charset")
+	pipe <- r.Form.Get("encode")
+	pipe <- r.Form.Get("length")
+	pipe <- r.Form.Get("callback")
+}
+
+func fetchInfo() {
+	lenStr := <-pipe
+	if lenStr == "" || len(lenStr) > 3 {
+		db.QueryRow("SELECT RANDOMFETCH($1);", -1).Scan(&hitoinfo)
+	} else {
+		length, err := strconv.Atoi(lenStr)
+		checkErr(err)
+		db.QueryRow("SELECT RANDOMFETCH($1);", length).Scan(&hitoinfo)
+	}
+}
+
+func setResponse(w http.ResponseWriter) {
+	var buffer bytes.Buffer
+	charset := <-pipe
+	contenttype := ""
+	if "gbk" != charset {
+		charset = "utf-8"
+	}
+	switch e := <-pipe; e {
+	case "js":
+		contenttype = "text/javascript; charset=" + charset
+		buffer.WriteString("var hitokoto=\"")
+		buffer.WriteString(hitoinfo.Hito)
+		buffer.WriteString("——「")
+		buffer.WriteString(hitoinfo.Source)
+		buffer.WriteString("」\";var dom=document.querySelector('.hitokoto');")
+		buffer.WriteString("Array.isArray(dom)?dom[0].innerText=hitokoto:dom.innerText=hitokoto;")
+		break
+	case "json":
+		contenttype = "application/json; charset=" + charset
+		buffer.WriteString("{\"hitokoto\": \"")
+		buffer.WriteString(hitoinfo.Hito)
+		buffer.WriteString("\", \"source\": \"")
+		buffer.WriteString(hitoinfo.Source)
+		buffer.WriteString("\"}")
+		break
+	default:
+		contenttype = "text/plain; charset=" + charset
+		buffer.WriteString(hitoinfo.Hito)
+		buffer.WriteString("——「")
+		buffer.WriteString(hitoinfo.Source)
+		buffer.WriteString("」")
+	}
+	w.Header().Set("Content-Type", contenttype)
+	w.Write(buffer.Bytes())
+}
+
+func setCallback(w http.ResponseWriter) {
+	json, _ := hitoinfo.Value()
+	var buffer bytes.Buffer
+	callback := <-pipe
+	if "" == callback {
+		return
+	}
+	contenttype := "text/javascript"
+	w.Header().Set("Content-Type", contenttype)
+	buffer.WriteString(callback)
+	buffer.WriteString("(")
+	buffer.WriteString(string(json))
+	buffer.WriteString(")")
+	w.Write(buffer.Bytes())
+
+}
 
 // Hitokoto handle function
 func Hitokoto(w http.ResponseWriter, r *http.Request) {
+	log.Println(r.URL.Path)
 	isLimited := setLimitHeader(w, r)
 	if isLimited {
 		return
 	}
-	cnt := new(Content)
-	log.Println(r.URL.Path)
-	// setReqHeader(r)
-	// get params
-	r.ParseForm()
-	encode := r.Form.Get("encode")
-	length := r.Form.Get("length")
-	callback := r.Form.Get("callback")
-	charset := r.Form.Get("charset")
-	if charset != "gbk" {
-		charset = "utf-8"
-	}
-	// fetch data
-	if length == "" || len(length) > 3 {
-		db.QueryRow("SELECT RANDOMFETCH($1);", -1).Scan(&cnt)
-	} else {
-		lengthInt, err := strconv.Atoi(length)
-		if err != nil {
-			checkErr(err)
-		} else {
-			db.QueryRow("SELECT RANDOMFETCH($1);", lengthInt).Scan(&cnt)
-		}
-	}
-	cntJSON, _ := cnt.Value()
-	// hasCallback is return data
-	w.Header().Set("Content-Type", FormatMap["text"].Charset+charset)
-	// The value that needs to be returned
-	content = fmt.Sprintf(FormatMap["text"].Text, cnt.Hito, cnt.Source)
-	// set content to encode format
-	if text, ok := FormatMap[encode]; ok {
-		w.Header().Set("Content-Type", text.Charset+charset)
-		content = fmt.Sprintf(text.Text, cnt.Hito, cnt.Source)
-	}
-	// if url params have callback then will ignore encode
-	if callback != "" {
-		w.Header().Set("Content-Type", "text/javascript; charset="+charset)
-		content = fmt.Sprintf("%s(%s)", callback, string(cntJSON.([]byte)))
-	}
-
-	// output content
-	fmt.Fprint(w, content)
-
+	parseParams(r) // parse Params
+	fetchInfo()    // fetch hitokoto info
+	setResponse(w) // set content-type header
+	setCallback(w) // check callback param
 }

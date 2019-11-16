@@ -11,10 +11,10 @@ func main() {
 	initConfig(*configPath)
 	initHitokotoDB()
 	initRedis()
-	MakeReturnMap()
 
-	http.HandleFunc("/hitokoto/v2/", Hitokoto)
 	log.Println("listening in " + config.ListenPort + "port.")
-	err := http.ListenAndServe(config.ListenPort, nil)
+	http.HandleFunc("/hitokoto/v2/", Hitokoto)
+
+	err = http.ListenAndServe(config.ListenPort, nil)
 	checkErr(err)
 }
