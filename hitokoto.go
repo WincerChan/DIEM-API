@@ -90,7 +90,6 @@ func makeSTDResponse(w http.ResponseWriter, pipe chan string) {
 		buffer.WriteString(hitoinfo.Source)
 		buffer.WriteString("」\";var dom=document.querySelector('.hitokoto');")
 		buffer.WriteString("Array.isArray(dom)?dom[0].innerText=hitokoto:dom.innerText=hitokoto;")
-		break
 	case "json":
 		contenttype = "application/json; charset=" + charset
 		buffer.WriteString("{\"hitokoto\": \"")
@@ -98,14 +97,12 @@ func makeSTDResponse(w http.ResponseWriter, pipe chan string) {
 		buffer.WriteString("\", \"source\": \"")
 		buffer.WriteString(hitoinfo.Source)
 		buffer.WriteString("\"}")
-		break
 	default:
 		contenttype = "text/plain; charset=" + charset
 		buffer.WriteString(hitoinfo.Hito)
 		buffer.WriteString("——「")
 		buffer.WriteString(hitoinfo.Source)
 		buffer.WriteString("」")
-		break
 	}
 	w.Header().Set("Content-Type", contenttype)
 	w.Write(buffer.Bytes())

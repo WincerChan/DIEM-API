@@ -18,7 +18,7 @@ func init() {
 }
 
 func main() {
-	log.Println("listening in " + config.ListenPort + "port.")
+	log.Println("listening in " + config.ListenPort + " port.")
 	http.HandleFunc("/hitokoto/v2/", Hitokoto)
 
 	err = http.ListenAndServe(config.ListenPort, nil)
