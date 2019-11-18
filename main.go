@@ -6,8 +6,11 @@ import (
 	"net/http"
 )
 
+var configPath = flag.String("config", "config.yaml", "Config file.")
+
 func main() {
-	configPath := flag.String("config", "config.yaml", "Config file.")
+	flag.Parse()
+	
 	initConfig(*configPath)
 	initHitokotoDB()
 	initRedis()
