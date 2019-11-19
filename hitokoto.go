@@ -32,21 +32,23 @@ func (c *Info) Scan(value interface{}) error {
 	return json.Unmarshal(b, &c)
 }
 
-func setLimitHeader(w http.ResponseWriter, r *http.Request) bool {
+func setLimitHeader(w http.ResponseWriter, r *http.Request) (limited bool) {
 	// If user do not enable redis-cell limit, just do not check
 	if !config.Redis.Enabled {
-		return false
+		return
 	}
+
 	ret := getRemainingNumbers(r)
-	w.Header().Set("X-RateLimit-Limit", strconv.FormatInt(ret[1].(int64), 10))
-	w.Header().Set("X-RateLimit-Remaining", strconv.FormatInt(ret[2].(int64), 10))
-	w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(ret[4].(int64), 10))
-	if ret[0].(int64) == 1 {
-		content := "{\"result\": \"Your IP requests is frequently.\"}"
-		w.Write([]byte(content))
-		return true
+	w.Header().Set("X-RateLimit-Limit", ret[1])
+	w.Header().Set("X-RateLimit-Remaining", ret[2])
+	w.Header().Set("X-RateLimit-Reset", ret[4])
+
+	if ret[0] == "0" {
+		return
 	}
-	return false
+
+	w.Write([]byte("Sorry, Your IP requests is too frequently."))
+	return true
 }
 
 func parseParams(r *http.Request, pipe chan string) {

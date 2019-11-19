@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/ioutil"
+	"strconv"
 
 	// "github.com/gomodule/redigo/redis"
 	"github.com/go-redis/redis/v7"
@@ -55,7 +56,7 @@ func initHitokotoDB() {
 	checkErr(err)
 }
 
-func getRemainingNumbers(r *http.Request) []interface{} {
+func getRemainingNumbers(r *http.Request) (limitInfo []string) {
 	header := r.Header
 	xforwared := header.Get("X-Forwarded-For")
 	if xforwared == "" {
@@ -63,7 +64,13 @@ func getRemainingNumbers(r *http.Request) []interface{} {
 	}
 	ret, err := conn.Do("CL.THROTTLE", xforwared, "35", "36", "360").Result()
 	checkErr(err)
-	return ret.([]interface{})
+
+	for _, v := range ret.([]interface{}) {
+		v := v.(int64)                   // type assertion
+		vStr := strconv.FormatInt(v, 10) // int64 to str
+		limitInfo = append(limitInfo, vStr)
+	}
+	return
 }
 
 func checkErr(err error) {
