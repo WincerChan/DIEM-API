@@ -56,13 +56,15 @@ func initHitokotoDB() {
 	checkErr(err)
 }
 
-func getRemainingNumbers(r *http.Request) (limitInfo []string) {
-	header := r.Header
-	xforwared := header.Get("X-Forwarded-For")
-	if xforwared == "" {
-		xforwared = "NoForwaredIP"
+func getRateLimitNumbers(r *http.Request) (limitInfo []string) {
+	var xff string
+
+	if xff = r.Header.Get("X-Forwarded-For"); xff == "" {
+		xff = "NoForwardedIP"
 	}
-	ret, err := conn.Do("CL.THROTTLE", xforwared, "35", "36", "360").Result()
+
+	ret, err := conn.Do("CL.THROTTLE", xff,
+		"35", "36", "360").Result()
 	checkErr(err)
 
 	for _, v := range ret.([]interface{}) {

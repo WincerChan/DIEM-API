@@ -11,7 +11,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-var hitoinfo *Info
+var hitoinfo Info
 var done bool
 
 type Info struct {
@@ -38,7 +38,7 @@ func setLimitHeader(w http.ResponseWriter, r *http.Request) (limited bool) {
 		return
 	}
 
-	ret := getRemainingNumbers(r)
+	ret := getRateLimitNumbers(r)
 	w.Header().Set("X-RateLimit-Limit", ret[1])
 	w.Header().Set("X-RateLimit-Remaining", ret[2])
 	w.Header().Set("X-RateLimit-Reset", ret[4])
