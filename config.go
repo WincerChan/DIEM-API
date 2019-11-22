@@ -21,6 +21,7 @@ var config *UserConfig
 type UserConfig struct {
 	Postgres struct {
 		User     string `yaml:"user"`
+		Host     string `yaml:"host"`
 		Password string `yaml:"password"`
 		Database string `yaml:"database"`
 	}
@@ -48,9 +49,10 @@ func initRedis() {
 }
 
 func initHitokotoDB() {
-	url := fmt.Sprintf("postgres://%s:%s@localhost/%s?sslmode=disable",
+	url := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable",
 		config.Postgres.User,
 		config.Postgres.Password,
+		config.Postgres.Host,
 		config.Postgres.Database)
 	db, err = sqlx.Connect("postgres", url)
 	checkErr(err)
