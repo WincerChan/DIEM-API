@@ -25,9 +25,9 @@ func (l *Logger) createFile() {
 	l.Writer = FileCreator.New(l.fullName)
 }
 
-func NewLogger(ltype string) *Logger {
+func NewLogger(logtype string) *Logger {
 	llog := new(Logger)
-	llog.Ltype = ltype
+	llog.Ltype = logtype
 	llog.createFile()
 
 	return llog
