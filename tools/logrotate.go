@@ -26,11 +26,11 @@ func (l *Logger) createFile() {
 }
 
 func NewLogger(logtype string) *Logger {
-	llog := new(Logger)
-	llog.Ltype = logtype
-	llog.createFile()
+	newlogger := new(Logger)
+	newlogger.Ltype = logtype
+	newlogger.createFile()
 
-	return llog
+	return newlogger
 }
 
 func (l *Logger) doRotate(now time.Time) {
