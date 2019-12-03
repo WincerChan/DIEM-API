@@ -33,7 +33,7 @@ func NewLogger(logtype string) *Logger {
 	return newlogger
 }
 
-func (l *Logger) doRotate(now time.Time) {
+func (l *Logger) doRollover(now time.Time) {
 	CopyFile(l.fullName, l.fullName+now.Format("2006-01-02"))
 	l.Writer = FileCreator.New(l.fullName)
 }
@@ -45,7 +45,7 @@ func (l *Logger) rename(now time.Time) {
 
 	t := time.NewTimer(restHour + restMinute + restSecond)
 	<-t.C
-	l.doRotate(now)
+	l.doRollover(now)
 }
 
 func (l *Logger) Rotate() {
