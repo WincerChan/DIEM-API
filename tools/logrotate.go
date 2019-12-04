@@ -16,19 +16,15 @@ const (
 
 type Logger struct {
 	Writer   io.Writer
-	Ltype    string
+	level    string
 	fullName string
 }
 
-func (l *Logger) createFile() {
-	l.fullName = path.Join(logpath, l.Ltype, l.Ltype+".log")
-	l.Writer = FileCreator.New(l.fullName)
-}
-
-func NewLogger(logtype string) *Logger {
+func NewLogger(level string) *Logger {
 	newlogger := new(Logger)
-	newlogger.Ltype = logtype
-	newlogger.createFile()
+	newlogger.level = level
+	newlogger.fullName = path.Join(logpath, level, level+".log")
+	newlogger.Writer = FileCreator.New(newlogger.fullName)
 
 	return newlogger
 }
