@@ -2,6 +2,7 @@ package main
 
 import (
 	L "DIEM-API/middleware/logger"
+	C "DIEM-API/middleware/rate-limiting"
 	R "DIEM-API/middleware/recovery"
 
 	"github.com/gin-gonic/gin"
@@ -25,6 +26,7 @@ func main() {
 	r := gin.New()
 	r.Use(L.Log)
 	r.Use(R.Recover)
+	r.Use(C.Limiting)
 	r.GET("/pong", pong)
 	r.GET("/pang", pang)
 	r.Run()
