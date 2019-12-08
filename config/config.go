@@ -11,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
 
+	_ "github.com/lib/pq"
 	"github.com/rs/zerolog"
 )
 
@@ -24,6 +25,7 @@ var LogOutput struct {
 var (
 	RedisCli *redis.Client
 	PGConn   *sqlx.DB
+	err      error
 )
 
 func initLog() {
@@ -40,7 +42,12 @@ func initRedis() {
 		Password: viper.GetString("redis.password"),
 		DB:       viper.GetInt("redis.db"),
 	})
-	println("Addr", viper.GetString("redis.address"), viper.GetString("redis.password"), viper.GetInt("redis.db"))
+	// println("Addr", viper.GetString("redis.address"), viper.GetString("redis.password"), viper.GetInt("redis.db"))
+	_, err := RedisCli.Ping().Result()
+	if err != nil {
+		println("ERROR: Sorry, Redis is not connected.")
+		os.Exit(1)
+	}
 }
 
 func initConfig() {
@@ -55,14 +62,18 @@ func initConfig() {
 
 func initPG() {
 	pgInfo := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		viper.GetString("postgres.host"),
-		viper.GetString("postgres.port"),
+		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
 		viper.GetString("postgres.user"),
 		viper.GetString("postgres.password"),
-		viper.GetString("postgres.dbname"),
+		viper.GetString("postgres.host"),
+		viper.GetInt("postgres.port"),
+		viper.GetString("postgres.database"),
 		viper.GetString("postgres.sslmode"))
-	PGConn, _ = sqlx.Open("postgres", pgInfo)
+	println(pgInfo)
+	PGConn, err = sqlx.Connect("postgres", pgInfo)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func init() {
