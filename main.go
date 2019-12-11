@@ -4,6 +4,7 @@ import (
 	L "DIEM-API/middleware/logger"
 	C "DIEM-API/middleware/rate-limiting"
 	R "DIEM-API/middleware/recovery"
+	S "DIEM-API/services"
 
 	"github.com/gin-gonic/gin"
 )
@@ -29,5 +30,6 @@ func main() {
 	r.Use(C.Limiting)
 	r.GET("/pong", pong)
 	r.GET("/pang", pang)
+	r.GET("/hitokoto/v2/", S.Hitokoto)
 	r.Run()
 }

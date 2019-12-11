@@ -62,7 +62,7 @@ func initConfig() {
 
 func initPG() {
 	pgInfo := fmt.Sprintf(
-		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
+		"user=%s password=%s host=%s port=%d dbname=%s sslmode=%s",
 		viper.GetString("postgres.user"),
 		viper.GetString("postgres.password"),
 		viper.GetString("postgres.host"),
