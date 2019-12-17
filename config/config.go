@@ -42,7 +42,6 @@ func initRedis() {
 		Password: viper.GetString("redis.password"),
 		DB:       viper.GetInt("redis.db"),
 	})
-	// println("Addr", viper.GetString("redis.address"), viper.GetString("redis.password"), viper.GetInt("redis.db"))
 	_, err := RedisCli.Ping().Result()
 	if err != nil {
 		println("ERROR: Sorry, Redis is not connected.")

@@ -2,6 +2,7 @@ package services
 
 import (
 	C "DIEM-API/config"
+	"bytes"
 	"encoding/json"
 	"errors"
 
@@ -9,7 +10,7 @@ import (
 )
 
 var params struct {
-	Length   int    `form:"length" binding:"required,min=1,max=100"`
+	Length   int    `form:"length"`
 	Callback string `form:"callback"`
 	Encode   string `form:"encode"`
 }
@@ -37,15 +38,54 @@ func fetch(info *HitoInfo) {
 	row.Scan(info)
 }
 
-func Hitokoto(ctx *gin.Context) {
-	info := new(HitoInfo)
+func JSONFormat(ctx *gin.Context, info *HitoInfo) {
+	ctx.JSON(200, info)
+}
+
+func JSFormat(ctx *gin.Context, info *HitoInfo) {
+	var buf bytes.Buffer
+	buf.WriteString("var hitokoto=\"")
+	buf.WriteString(info.Hito)
+	buf.WriteString("——「")
+	buf.WriteString(info.Source)
+	buf.WriteString("」\";var dom=document.querySelector('.hitokoto');")
+	buf.WriteString("Array.isArray(dom)?dom[0].innerText=hitokoto:dom.innerText=hitokoto;")
+	ctx.Data(200, "text/javascript; charset=utf-8", buf.Bytes())
+}
+
+func PlainFormat(ctx *gin.Context, info *HitoInfo) {
+	ctx.String(200, info.Hito+"——「"+info.Source+"」")
+}
+
+func validateQueryParams(ctx *gin.Context) bool {
 	err := ctx.Bind(&params)
 
 	if err != nil {
 		ctx.JSON(400, gin.H{
 			"error": err.Error(),
 		})
+		return false
 	}
+	return true
+}
+
+func Hitokoto(ctx *gin.Context) {
+	if !validateQueryParams(ctx) {
+		return
+	}
+	info := new(HitoInfo)
 	fetch(info)
-	ctx.JSON(200, info)
+	if params.Callback != "" {
+		ctx.JSONP(200, info)
+		return
+	}
+
+	switch params.Encode {
+	case "json":
+		JSONFormat(ctx, info)
+	case "js":
+		JSFormat(ctx, info)
+	default:
+		PlainFormat(ctx, info)
+	}
 }
