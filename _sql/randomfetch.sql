@@ -6,7 +6,7 @@ DECLARE
   amount int;
   lengths smallint;
 BEGIN
-  IF len < 4 THEN
+  IF len < 2 OR len > 100 THEN
     amount := (SELECT reltuples::bigint FROM pg_catalog.pg_class WHERE relname = 'hitokoto');
     lengths := 32767;
   ELSE
