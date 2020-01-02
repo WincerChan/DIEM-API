@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var params struct {
+type params struct {
 	Length   int    `form:"length"`
 	Callback string `form:"callback"`
 	Encode   string `form:"encode"`
@@ -33,8 +33,8 @@ func (h *HitoInfo) Scan(value interface{}) error {
 	return json.Unmarshal(b, &h)
 }
 
-func fetch(info *HitoInfo) {
-	row := C.PGConn.QueryRow("SELECT RANDOMFETCH($1);", params.Length)
+func fetchHitokoto(info *HitoInfo, length int) {
+	row := C.PGConn.QueryRow("SELECT RANDOMFETCH($1);", length)
 	row.Scan(info)
 }
 
@@ -57,35 +57,31 @@ func PlainFormat(ctx *gin.Context, info *HitoInfo) {
 	ctx.String(200, info.Hito+"——「"+info.Source+"」")
 }
 
-func validateQueryParams(ctx *gin.Context) bool {
-	err := ctx.Bind(&params)
+func checkValidReq(ctx *gin.Context, p *params) {
+	err := ctx.Bind(p)
 
 	if err != nil {
 		ctx.JSON(400, gin.H{
 			"error": err.Error(),
 		})
-		return false
+		ctx.Abort()
 	}
-	return true
 }
 
 func Hitokoto(ctx *gin.Context) {
-	if !validateQueryParams(ctx) {
-		return
-	}
+	p := new(params)
 	info := new(HitoInfo)
-	fetch(info)
-	if params.Callback != "" {
-		ctx.JSONP(200, info)
-		return
-	}
 
-	switch params.Encode {
-	case "json":
-		JSONFormat(ctx, info)
-	case "js":
+	checkValidReq(ctx, p)
+	fetchHitokoto(info, p.Length)
+
+	if p.Callback != "" {
+		ctx.JSONP(200, info)
+	} else if p.Encode == "js" {
 		JSFormat(ctx, info)
-	default:
+	} else if p.Encode == "json" {
+		JSONFormat(ctx, info)
+	} else {
 		PlainFormat(ctx, info)
 	}
 }
