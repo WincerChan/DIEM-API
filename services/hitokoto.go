@@ -57,6 +57,10 @@ func PlainFormat(ctx *gin.Context, info *HitoInfo) {
 	ctx.String(200, info.Hito+"——「"+info.Source+"」")
 }
 
+func TextFormat(ctx *gin.Context, info *HitoInfo) {
+	ctx.String(200, info.Hito)
+}
+
 func checkValidReq(ctx *gin.Context, p *params) {
 	err := ctx.Bind(p)
 
@@ -81,6 +85,8 @@ func Hitokoto(ctx *gin.Context) {
 		JSFormat(ctx, info)
 	} else if p.Encode == "json" {
 		JSONFormat(ctx, info)
+	} else if p.Encode == "text" {
+		TextFormat(ctx, info)
 	} else {
 		PlainFormat(ctx, info)
 	}
