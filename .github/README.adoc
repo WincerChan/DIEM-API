@@ -15,12 +15,12 @@ clone 本仓库并在 `config.yaml` 填入 PostgreSQL 的用户名、密码，Re
 [source,sh]
 ----
 go build -o server # <1>
-./server config.yaml # <2>
-./server config.yaml 2> debug.log # <3>
+./server # <2>
+env GIN_MODE=release ./server # <3>
 ----
 <1> 编译成二进制
 <2> 开发环境
-<3> 生产环境
+<3> 生产环境（即设置环境变量 GIN_MODE 为 release）
 
-其中生产环境会把输出放入 debug.log 文件中。
+其中生产环境不会在终端打印日志，而是会把日志都记录在 _log 文件夹内。
 
