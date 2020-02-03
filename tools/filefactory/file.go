@@ -1,4 +1,4 @@
-package tools
+package filefactory
 
 import (
 	"io"
@@ -8,11 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-type logFile struct {
-}
-
-var FileCreator logFile
-
+// CopyFile xxx
 func CopyFile(srcFile, destFile string) error {
 	file, err := os.Open(srcFile)
 	if err != nil {
@@ -28,18 +24,21 @@ func CopyFile(srcFile, destFile string) error {
 	return err
 }
 
-func makeFileDir(filename string) {
+func makeFileDir(filename string) error {
 	filepath := filepath.Dir(filename)
 	os.MkdirAll(filepath, os.ModePerm)
+	return nil
 }
 
-func (f *logFile) New(filename string) *os.File {
-	makeFileDir(filename)
+// NewFile xxx
+func NewFile(filename string) *os.File {
+	_ = makeFileDir(filename)
 
 	newFile, err := os.OpenFile(filename,
 		os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
-		log.Warn().Timestamp().Msg("Could not create log file.")
+		log.Warn().Timestamp().
+			Msg("Could not create log file.")
 	}
 	return newFile
 }
