@@ -1,7 +1,7 @@
 package logger
 
 import (
-	"DIEM-API/config"
+	Logf "DIEM-API/tools/logfactory"
 	"io"
 
 	"github.com/gin-gonic/gin"
@@ -18,10 +18,10 @@ func initLogWriter(w io.Writer) {
 func init() {
 	ginMode := gin.Mode()
 	if ginMode == "release" {
-		initLogWriter(config.GetWriter("access"))
+		initLogWriter(Logf.GetWriter("access"))
 		return
 	}
-	initLogWriter(config.GetWriter("std"))
+	initLogWriter(Logf.GetWriter("std"))
 }
 
 func Log(c *gin.Context) {
