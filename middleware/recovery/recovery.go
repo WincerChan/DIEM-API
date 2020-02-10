@@ -1,7 +1,7 @@
 package recovery
 
 import (
-	"DIEM-API/config"
+	Logf "DIEM-API/tools/logfactory"
 	"errors"
 	"runtime/debug"
 
@@ -13,7 +13,7 @@ import (
 var zlog zerolog.Logger
 
 func init() {
-	writer := config.GetWriter("error")
+	writer := Logf.GetWriter("error")
 	zlog = zerolog.New(writer).
 		With().Timestamp().Logger()
 }

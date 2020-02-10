@@ -2,10 +2,9 @@ package config
 
 import (
 	"fmt"
-	"io"
 	"os"
 
-	T "DIEM-API/tools"
+	Logf "DIEM-API/tools/logfactory"
 
 	"github.com/go-redis/redis/v7"
 	"github.com/jmoiron/sqlx"
@@ -15,13 +14,6 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// LogOutput
-var LogOutput struct {
-	stderr    io.Writer
-	errLog    *T.Logger
-	accessLog *T.Logger
-}
-
 var (
 	RedisCli *redis.Client
 	PGConn   *sqlx.DB
@@ -29,11 +21,11 @@ var (
 )
 
 func initLog() {
-	LogOutput.stderr = zerolog.ConsoleWriter{Out: os.Stderr}
-	LogOutput.errLog = T.NewLogger("error")
-	LogOutput.accessLog = T.NewLogger("access")
-	go LogOutput.errLog.Rotate()
-	go LogOutput.accessLog.Rotate()
+	Logf.Stderr = zerolog.ConsoleWriter{Out: os.Stderr}
+	Logf.ErrLog = Logf.NewLogger("error")
+	Logf.AccessLog = Logf.NewLogger("access")
+	go Logf.ErrLog.Rotate()
+	go Logf.AccessLog.Rotate()
 }
 
 func initRedis() {
@@ -79,17 +71,4 @@ func init() {
 	initConfig()
 	initPG()
 	initRedis()
-}
-
-// 应该放在 tools 方便取出来用
-func GetWriter(w string) io.Writer {
-	switch w {
-	case "std":
-		return LogOutput.stderr
-	case "error":
-		return LogOutput.errLog.Writer
-	case "access":
-		return LogOutput.accessLog.Writer
-	}
-	return nil
 }
