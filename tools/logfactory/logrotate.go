@@ -15,16 +15,17 @@ const (
 	logpath = "_log"
 )
 
+var (
+	Stderr    io.Writer
+	ErrLog    *logger
+	AccessLog *logger
+)
+
 type logger struct {
 	Writer   io.Writer
 	level    string
 	fullName string
 }
-
-var (
-	Stderr            io.Writer
-	ErrLog, AccessLog *logger
-)
 
 func NewLogger(level string) *logger {
 	newlogger := new(logger)
@@ -40,20 +41,15 @@ func (l *logger) doRollover(now time.Time) {
 	l.Writer = filefactory.NewFile(l.fullName)
 }
 
-func (l *logger) rename(now time.Time) {
-	restHour := time.Hour * time.Duration(dayHour-now.Hour())
-	restMinute := time.Minute * time.Duration(dayMinute-now.Minute())
-	restSecond := time.Second * time.Duration(daySecond-now.Second())
-
-	t := time.NewTimer(restHour + restMinute + restSecond)
-	<-t.C
-	l.doRollover(now)
-}
-
 func (l *logger) Rotate() {
 	for {
 		now := time.Now()
-		l.rename(now)
+		restHour := time.Hour * time.Duration(dayHour-now.Hour())
+		restMinute := time.Minute * time.Duration(dayMinute-now.Minute())
+		restSecond := time.Second * time.Duration(daySecond-now.Second())
+		t := time.NewTimer(restHour + restMinute + restSecond)
+		<-t.C
+		l.doRollover(now)
 	}
 }
 
