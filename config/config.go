@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	DNSTool "DIEM-API/tools/dnslookup"
 	Logf "DIEM-API/tools/logfactory"
 
 	"github.com/go-redis/redis/v7"
@@ -16,6 +17,7 @@ import (
 
 var (
 	RedisCli *redis.Client
+	Enabled  bool
 	PGConn   *sqlx.DB
 	err      error
 )
@@ -29,15 +31,24 @@ func initLog() {
 }
 
 func initRedis() {
+	address := DNSTool.ResolveAddr(viper.GetString("redis.address"))
 	RedisCli = redis.NewClient(&redis.Options{
-		Addr:     viper.GetString("redis.address"),
+		Addr:     address,
 		Password: viper.GetString("redis.password"),
 		DB:       viper.GetInt("redis.db"),
 	})
 	_, err := RedisCli.Ping().Result()
 	if err != nil {
-		println("ERROR: Sorry, Redis is not connected.")
-		os.Exit(1)
+		println("ERROR: Redis is not connected, disable rate-limiting.")
+        return
+	}
+	_, err = RedisCli.Do("CL.THROTTLE", "", "35", "36", "360").Result()
+	if err != nil {
+		println("WARNING: No redis-cell module detected, disable rate-limiting.")
+        return
+	}
+	if viper.GetBool("redis.enabled") {
+		Enabled = true
 	}
 }
 
@@ -52,9 +63,10 @@ func initConfig() {
 }
 
 func initPG() {
+	host := DNSTool.ResolveOne(viper.GetString("postgres.host"))
 	pgInfo := fmt.Sprintf(
 		"host=%s user=%s port=%d dbname=%s sslmode=%s password=%s",
-		viper.GetString("postgres.host"),
+		host,
 		viper.GetString("postgres.user"),
 		viper.GetInt("postgres.port"),
 		viper.GetString("postgres.database"),
