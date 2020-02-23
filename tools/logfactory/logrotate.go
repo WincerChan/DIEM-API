@@ -12,7 +12,7 @@ const (
 	dayMinute = 59
 	daySecond = 60
 
-	logpath = "_log"
+	logPath = "_log"
 )
 
 var (
@@ -28,19 +28,21 @@ type logger struct {
 }
 
 func NewLogger(level string) *logger {
-	newlogger := new(logger)
-	newlogger.level = level
-	newlogger.fullName = path.Join(logpath, level, level+".log")
-	newlogger.Writer = filefactory.NewFile(newlogger.fullName)
+	aLogger := new(logger)
+	aLogger.level = level
+	aLogger.fullName = path.Join(logPath, level, level+".log")
+	aLogger.Writer = filefactory.NewFile(aLogger.fullName)
 
-	return newlogger
+	return aLogger
 }
 
+// rollover logfile everyday.
 func (l *logger) doRollover(now time.Time) {
 	filefactory.CopyFile(l.fullName, l.fullName+now.Format("2006-01-02"))
 	l.Writer = filefactory.NewFile(l.fullName)
 }
 
+// run rotate at 00:00:00
 func (l *logger) Rotate() {
 	for {
 		now := time.Now()
@@ -53,7 +55,7 @@ func (l *logger) Rotate() {
 	}
 }
 
-// GetWriter xx
+// GetWriter of each log level.
 func GetWriter(w string) io.Writer {
 	switch w {
 	case "std":

@@ -20,11 +20,13 @@ type HitoInfo struct {
 	Hito   string `json:"hitokoto"`
 }
 
+// override Scan implementation for Row.
 func (h HitoInfo) Value() []byte {
 	result, _ := json.Marshal(h)
 	return result
 }
 
+// override Scan implementation for Row.
 func (h *HitoInfo) Scan(value interface{}) error {
 	b, ok := value.([]byte)
 	if !ok {
@@ -33,6 +35,7 @@ func (h *HitoInfo) Scan(value interface{}) error {
 	return json.Unmarshal(b, &h)
 }
 
+// fetch hitokoto from database
 func fetchHitokoto(info *HitoInfo, length int) {
 	row := C.PGConn.QueryRow("SELECT RANDOMFETCH($1);", length)
 	row.Scan(info)
@@ -57,7 +60,8 @@ func PlainFormat(ctx *gin.Context, info *HitoInfo) {
 	ctx.String(200, info.Hito+"——「"+info.Source+"」")
 }
 
-func checkValidReq(ctx *gin.Context, p *params) {
+// attempt to bind url params
+func checkParams(ctx *gin.Context, p *params) {
 	err := ctx.Bind(p)
 
 	if err != nil {
@@ -72,7 +76,7 @@ func Hitokoto(ctx *gin.Context) {
 	p := new(params)
 	info := new(HitoInfo)
 
-	checkValidReq(ctx, p)
+	checkParams(ctx, p)
 	fetchHitokoto(info, p.Length)
 
 	if p.Callback != "" {
