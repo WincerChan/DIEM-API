@@ -1,68 +1,49 @@
 package config
 
 import (
-	"fmt"
-	"os"
-
+	T "DIEM-API/tools"
 	DNSTool "DIEM-API/tools/dnslookup"
-	Logf "DIEM-API/tools/logfactory"
-
+	"fmt"
 	"github.com/go-redis/redis/v7"
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
 
 	_ "github.com/lib/pq"
-	"github.com/rs/zerolog"
 )
 
 var (
-	RedisCli *redis.Client
-	Enabled  bool
-	PGConn   *sqlx.DB
-	err      error
+	RedisCli     *redis.Client
+	EnabledRedis bool
+	PGConn       *sqlx.DB
+	err          error
 )
-
-// init log configuration
-func initLog() {
-	Logf.Stderr = zerolog.ConsoleWriter{Out: os.Stderr}
-	Logf.ErrLog = Logf.NewLogger("error")
-	Logf.AccessLog = Logf.NewLogger("access")
-	go Logf.ErrLog.Rotate()
-	go Logf.AccessLog.Rotate()
-}
 
 // init redis connection
 func initRedis() {
+	if !viper.GetBool("redis.enabled") {
+		return
+	}
 	address := DNSTool.ResolveAddr(viper.GetString("redis.address"))
 	RedisCli = redis.NewClient(&redis.Options{
 		Addr:     address,
 		Password: viper.GetString("redis.password"),
 		DB:       viper.GetInt("redis.db"),
 	})
-	_, err := RedisCli.Ping().Result()
-	if err != nil {
-		println("ERROR: Redis is not connected, disable rate-limiting.")
-		return
-	}
+	_, err = RedisCli.Ping().Result()
+	T.CheckException(err,
+		"WARNING: Couldn't connect to Redis, please set redis.enabled to false.")
 	_, err = RedisCli.Do("CL.THROTTLE", "", "35", "36", "360").Result()
-	if err != nil {
-		println("WARNING: No redis-cell module detected, disable rate-limiting.")
-		return
-	}
-	if viper.GetBool("redis.enabled") {
-		Enabled = true
-	}
+	T.CheckException(err,
+		"WARNING: redis-cell module didn't detect, please set redis.enabled to false.")
+	EnabledRedis = true
 }
 
 // load config file from disk.
 func loadConfig() {
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
-	if err != nil {
-		// TODO
-		println("Load config failed.")
-	}
+	err = viper.ReadInConfig()
+	T.CheckFatalError(err, false)
 }
 
 // init PostgreSQL connection
@@ -77,14 +58,11 @@ func initPG() {
 		viper.GetString("postgres.sslmode"),
 		viper.GetString("postgres.password"))
 	PGConn, err = sqlx.Connect("postgres", pgInfo)
-	if err != nil {
-		panic(err)
-	}
+	T.CheckFatalError(err, false)
 }
 
 func init() {
 	loadConfig()
-	initLog()
 	initPG()
 	initRedis()
 }
