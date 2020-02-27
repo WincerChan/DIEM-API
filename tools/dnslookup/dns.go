@@ -1,6 +1,7 @@
 package dnslookup
 
 import (
+	T "DIEM-API/tools"
 	"net"
 	"strings"
 )
@@ -9,9 +10,7 @@ import (
 // return the first address.
 func ResolveOne(hostname string) string {
 	addresses, err := net.LookupHost(hostname)
-	if err != nil {
-		panic(err)
-	}
+	T.CheckFatalError(err, false)
 	return addresses[0]
 }
 
