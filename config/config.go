@@ -60,6 +60,7 @@ func initPG() {
 		viper.GetInt("postgres.port"),
 		viper.GetString("postgres.database"),
 		viper.GetString("postgres.sslmode"))
+    println(pgInfo)
 	PGConn, err = sqlx.Connect("postgres", pgInfo)
 	if err != nil {
 		panic(err)
