@@ -53,14 +53,13 @@ func initConfig() {
 
 func initPG() {
 	pgInfo := fmt.Sprintf(
-		"user=%s password=%s host=%s port=%d dbname=%s sslmode=%s",
-		viper.GetString("postgres.user"),
-		viper.GetString("postgres.password"),
+		"host=%s user=%s port=%d dbname=%s sslmode=%s password=%s",
 		viper.GetString("postgres.host"),
+		viper.GetString("postgres.user"),
 		viper.GetInt("postgres.port"),
 		viper.GetString("postgres.database"),
-		viper.GetString("postgres.sslmode"))
-    println(pgInfo)
+		viper.GetString("postgres.sslmode"),
+		viper.GetString("postgres.password"))
 	PGConn, err = sqlx.Connect("postgres", pgInfo)
 	if err != nil {
 		panic(err)

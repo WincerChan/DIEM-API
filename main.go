@@ -1,9 +1,10 @@
 package main
 
 import (
+	C "DIEM-API/middleware/limiting"
 	L "DIEM-API/middleware/logger"
-	C "DIEM-API/middleware/rate-limiting"
 	R "DIEM-API/middleware/recovery"
+
 	S "DIEM-API/services"
 
 	"github.com/gin-gonic/gin"
