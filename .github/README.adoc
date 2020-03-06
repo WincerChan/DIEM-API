@@ -10,6 +10,8 @@ image:https://img.shields.io/github/languages/code-size/WincerChan/Hitokoto.svg?
 
 == 部署
 
+=== 普通部署
+
 clone 本仓库并在 `config.yaml` 填入 PostgreSQL 的用户名、密码，Redis 的地址、密码等（格式参考 config_sample.yaml），*Redis 需载入 https://github.com/brandur/redis-cell[redis-cell] 模块*。
 
 [source,sh]
@@ -23,4 +25,15 @@ env GIN_MODE=release ./server # <3>
 <3> 生产环境（即设置环境变量 GIN_MODE 为 release）
 
 其中生产环境不会在终端打印日志，而是会把日志都记录在 _log 文件夹内。
+
+=== 容器版部署（推荐）
+clone 本仓库，并在 `config.yaml` 填入 PostgreSQL 的用户名、密码，Redis 的地址、密码等（格式参考 config_sample.yaml）。
+
+. docker build --tag loerfy/diem:v2.3 .
+. kubectl apply -f redis-deploy.yaml
+. kubectl apply -f postgres-pvc.yaml
+. kubectl apply -f postgres-deploy.yaml
+. kubectl apply -f diem-deploy.yaml
+
+WARNING: 其中 postgres-pvc.yaml 的数据库持久化路径需要自己配置一下。
 
