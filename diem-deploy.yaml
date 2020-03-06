@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
     name: diem
 spec:
-    replicas: 3
+    replicas: 1
     template:
         metadata:
             name: diem
@@ -11,7 +11,7 @@ spec:
                 app: diem
         spec:
             containers:
-            - image: loerfy/diem:v2.3
+            - image: loerfy/diem:v2.4
               name: redis
               imagePullPolicy: IfNotPresent
               env:
