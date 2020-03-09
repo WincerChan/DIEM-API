@@ -12,4 +12,5 @@ redis:
   db: 0
   enabled: false
 
-listenport: :5200
+google:
+  analytics_id: 153425181

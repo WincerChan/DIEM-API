@@ -15,6 +15,7 @@ var (
 	RedisCli     *redis.Client
 	EnabledRedis bool
 	PGConn       *sqlx.DB
+	GAViewID     string
 	err          error
 )
 
@@ -44,6 +45,7 @@ func loadConfig() {
 	viper.AddConfigPath(".")
 	err = viper.ReadInConfig()
 	T.CheckFatalError(err, false)
+	GAViewID = viper.GetString("google.analytics_id")
 }
 
 // init PostgreSQL connection
