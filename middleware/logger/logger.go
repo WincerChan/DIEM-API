@@ -10,6 +10,7 @@ import (
 
 var zlog zerolog.Logger
 
+// init log writer
 func initLogWriter(w io.Writer) {
 	zlog = zerolog.New(w).
 		With().Timestamp().Logger()
@@ -24,6 +25,7 @@ func init() {
 	initLogWriter(Logf.GetWriter("std"))
 }
 
+// log every request
 func Log(c *gin.Context) {
 	c.Next()
 	zlog.Debug().Int("| Status", c.Writer.Status()).

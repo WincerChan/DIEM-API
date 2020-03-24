@@ -5,16 +5,20 @@ import (
 	"strings"
 )
 
+// Resolve host use default dns lookup,
+// return the first address.
 func ResolveOne(hostname string) string {
-	addrs, err := net.LookupHost(hostname)
+	addresses, err := net.LookupHost(hostname)
 	if err != nil {
 		panic(err)
 	}
-	return addrs[0]
+	return addresses[0]
 }
 
+// Resolve host:port pair, then modify as
+// ip_address:port.
 func ResolveAddr(hostAndPort string) string {
-	addrs := strings.Split(hostAndPort, ":")
-	addrs[0] = ResolveOne(addrs[0])
-	return strings.Join(addrs, ":")
+	addresses := strings.Split(hostAndPort, ":")
+	addresses[0] = ResolveOne(addresses[0])
+	return strings.Join(addresses, ":")
 }

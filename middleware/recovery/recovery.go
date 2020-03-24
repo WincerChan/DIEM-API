@@ -18,10 +18,12 @@ func init() {
 		With().Timestamp().Logger()
 }
 
+// log error message
 func storeError() {
 	zlog.Error().Msg(string(debug.Stack()))
 }
 
+// recover from error, and save stack message to context.
 func Recover(c *gin.Context) {
 	defer func() {
 		r := recover()

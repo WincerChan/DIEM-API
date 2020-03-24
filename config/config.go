@@ -22,6 +22,7 @@ var (
 	err      error
 )
 
+// init log configuration
 func initLog() {
 	Logf.Stderr = zerolog.ConsoleWriter{Out: os.Stderr}
 	Logf.ErrLog = Logf.NewLogger("error")
@@ -30,6 +31,7 @@ func initLog() {
 	go Logf.AccessLog.Rotate()
 }
 
+// init redis connection
 func initRedis() {
 	address := DNSTool.ResolveAddr(viper.GetString("redis.address"))
 	RedisCli = redis.NewClient(&redis.Options{
@@ -40,19 +42,20 @@ func initRedis() {
 	_, err := RedisCli.Ping().Result()
 	if err != nil {
 		println("ERROR: Redis is not connected, disable rate-limiting.")
-        return
+		return
 	}
 	_, err = RedisCli.Do("CL.THROTTLE", "", "35", "36", "360").Result()
 	if err != nil {
 		println("WARNING: No redis-cell module detected, disable rate-limiting.")
-        return
+		return
 	}
 	if viper.GetBool("redis.enabled") {
 		Enabled = true
 	}
 }
 
-func initConfig() {
+// load config file from disk.
+func loadConfig() {
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
 	err := viper.ReadInConfig()
@@ -62,6 +65,7 @@ func initConfig() {
 	}
 }
 
+// init PostgreSQL connection
 func initPG() {
 	host := DNSTool.ResolveOne(viper.GetString("postgres.host"))
 	pgInfo := fmt.Sprintf(
@@ -79,8 +83,8 @@ func initPG() {
 }
 
 func init() {
+	loadConfig()
 	initLog()
-	initConfig()
 	initPG()
 	initRedis()
 }
