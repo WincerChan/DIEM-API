@@ -37,3 +37,6 @@ clone 本仓库，并在 `config.yaml` 填入 PostgreSQL 的用户名、密码�
 
 WARNING: 其中 postgres-pvc.yaml 的数据库持久化路径需要自己配置一下。
 
+== 致谢
+
+image:jetbrains-variant-4.png[jetbrains, link=https://www.jetbrains.com/?from=DIEM-API,width=160,height=90]
