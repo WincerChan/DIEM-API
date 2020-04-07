@@ -6,21 +6,11 @@ import (
 	"runtime/debug"
 
 	"github.com/gin-gonic/gin"
-
-	"github.com/rs/zerolog"
 )
-
-var zlog zerolog.Logger
-
-func init() {
-	writer := Logf.GetWriter("error")
-	zlog = zerolog.New(writer).
-		With().Timestamp().Logger()
-}
 
 // log error message
 func storeError() {
-	zlog.Error().Msg(string(debug.Stack()))
+	Logf.Error.Error().Msg(string(debug.Stack()))
 }
 
 // recover from error, and save stack message to context.

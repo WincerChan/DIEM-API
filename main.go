@@ -16,7 +16,7 @@ func main() {
 	r := gin.New()
 	r.Use(L.Log)
 	r.Use(R.Recover)
-	if F.Enabled {
+	if F.EnabledRedis {
 		r.Use(C.Limiting)
 	}
 	r.GET("/hitokoto/v2/", S.Hitokoto)
