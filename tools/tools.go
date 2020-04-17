@@ -2,6 +2,7 @@ package tools
 
 import (
 	Logf "DIEM-API/tools/logfactory"
+	"fmt"
 	"strconv"
 )
 
@@ -24,7 +25,7 @@ func Str(arg interface{}) (ret string) {
 	case int:
 		ret = strconv.Itoa(arg.(int))
 	case float64:
-		ret = strconv.FormatFloat(arg.(float64), 'E', -1, 32)
+		ret = fmt.Sprintf("%f", arg.(float64))
 	}
 	return
 }
