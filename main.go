@@ -5,7 +5,7 @@ import (
 	L "DIEM-API/middleware/logger"
 	R "DIEM-API/middleware/recovery"
 
-	S "DIEM-API/services"
+	V "DIEM-API/views"
 
 	F "DIEM-API/config"
 
@@ -19,7 +19,7 @@ func main() {
 	if F.EnabledRedis {
 		r.Use(C.Limiting)
 	}
-	r.GET("/hitokoto/v2/", S.Hitokoto)
-	r.GET("/gaviews/v1/", S.GAViews)
+	r.GET("/hitokoto/v2/", V.Hitokoto)
+	r.GET("/gaviews/v1/", V.GAViews)
 	r.Run()
 }
