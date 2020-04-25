@@ -63,7 +63,7 @@ func initPG() {
 	T.CheckFatalError(err, false)
 }
 
-func init() {
+func InitConfig() {
 	loadConfig()
 	initPG()
 	initRedis()
