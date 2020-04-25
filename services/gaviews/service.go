@@ -3,11 +3,7 @@ package gaviews
 import (
 	C "DIEM-API/config"
 	T "DIEM-API/tools"
-	"context"
 	gar "google.golang.org/api/analyticsreporting/v4"
-	"google.golang.org/api/option"
-	"io/ioutil"
-	"os"
 )
 
 type Params struct {
@@ -24,24 +20,9 @@ type View struct {
 	Count int    `json:"count"`
 }
 
-var analyticsreportingService *gar.Service
-
-func init() {
-	ctx := context.Background()
-	json := ParseCredentialJSON()
-	analyticsreportingService, _ = gar.NewService(ctx, option.WithCredentialsJSON(json))
-}
-func ParseCredentialJSON() []byte {
-	jsonFile, _ := os.Open("./credential.json")
-
-	byteValue, _ := ioutil.ReadAll(jsonFile)
-
-	return byteValue
-}
-
-func GetPathReport(p *Params) *gar.ReportRequest {
+func GetPathReport(p *Params, viewID string) *gar.ReportRequest {
 	reportParams := new(gar.ReportRequest)
-	reportParams.ViewId = C.GAViewID
+	reportParams.ViewId = viewID
 	reportParams.DateRanges = []*gar.DateRange{&gar.DateRange{StartDate: "2017-06-18", EndDate: "today"}}
 	reportParams.Metrics = []*gar.Metric{&gar.Metric{Expression: "ga:pageviews"}}
 	reportParams.Dimensions = []*gar.Dimension{&gar.Dimension{Name: "ga:pagePath"}}
@@ -58,7 +39,8 @@ func GetPathReport(p *Params) *gar.ReportRequest {
 	return reportParams
 }
 
-func SimplifiedResponse(response *gar.GetReportsResponse) (rr *ReportResponse) {
+func SimplifiedResponse(response *gar.GetReportsResponse) (rr ReportResponse) {
+	rr = *new(ReportResponse)
 	for _, report := range response.Reports {
 		rr.Total = T.Int(report.Data.Totals[0].Values[0])
 		rr.Details = make([]View, report.Data.RowCount)
@@ -70,14 +52,13 @@ func SimplifiedResponse(response *gar.GetReportsResponse) (rr *ReportResponse) {
 }
 
 func GetPageViews(p *Params, pageView *ReportResponse) {
-
-	report := GetPathReport(p)
+	report := GetPathReport(p, C.GAViewID)
 	req := &gar.GetReportsRequest{
 		ReportRequests: []*gar.ReportRequest{
 			report,
 		},
 	}
-	resp, err := analyticsreportingService.Reports.BatchGet(req).Do()
+	resp, err := C.AnalyticsReportingService.Reports.BatchGet(req).Do()
 	T.CheckException(err, "Failed to get analytics report.")
-	pageView = SimplifiedResponse(resp)
+	*pageView = SimplifiedResponse(resp)
 }
