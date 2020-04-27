@@ -3,20 +3,24 @@ package config
 import (
 	T "DIEM-API/tools"
 	DNSTool "DIEM-API/tools/dnslookup"
+	"context"
 	"fmt"
 	"github.com/go-redis/redis/v7"
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
+	gar "google.golang.org/api/analyticsreporting/v4"
+	"google.golang.org/api/option"
 
 	_ "github.com/lib/pq"
 )
 
 var (
-	RedisCli     *redis.Client
-	EnabledRedis bool
-	PGConn       *sqlx.DB
-	GAViewID     string
-	err          error
+	RedisCli                  *redis.Client
+	EnabledRedis              bool
+	PGConn                    *sqlx.DB
+	GAViewID                  string
+	err                       error
+	AnalyticsReportingService *gar.Service
 )
 
 // init redis connection
@@ -63,8 +67,16 @@ func initPG() {
 	T.CheckFatalError(err, false)
 }
 
+func initCredential() {
+	ctx := context.Background()
+	json := T.LoadJSON("./credential.json")
+	AnalyticsReportingService, err = gar.NewService(ctx, option.WithCredentialsJSON(json))
+	T.CheckFatalError(err, false)
+}
+
 func InitConfig() {
 	loadConfig()
 	initPG()
 	initRedis()
+	initCredential()
 }
