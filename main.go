@@ -20,5 +20,6 @@ func main() {
 		r.Use(C.Limiting)
 	}
 	r.GET("/hitokoto/v2/", S.Hitokoto)
+	r.GET("/gaviews/v1/", S.GAViews)
 	r.Run()
 }
