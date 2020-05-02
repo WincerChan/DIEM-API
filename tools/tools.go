@@ -28,3 +28,12 @@ func Str(arg interface{}) (ret string) {
 	}
 	return
 }
+
+func Int(arg interface{}) (ret int) {
+	switch arg.(type) {
+	case string:
+		ret, _ = strconv.Atoi(arg.(string))
+
+	}
+	return
+}
