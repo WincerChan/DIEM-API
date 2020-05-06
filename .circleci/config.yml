@@ -14,7 +14,7 @@ jobs:
           command: |
             go build -o server
       - save_cache:
-          key: hitokoto-v1-{{ checksum "config_sample.json" }}
+          key: hitokoto-v1-{{ checksum "config_sample.yaml" }}
           paths:
             - server
 
