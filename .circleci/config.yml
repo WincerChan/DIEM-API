@@ -1,6 +1,6 @@
 defaults: &defaults
   docker:
-    - image: circleci/golang:1.10.3
+    - image: circleci/golang:1.14.2
 
 version: 2
 
@@ -12,28 +12,11 @@ jobs:
       - run:
           name: Build
           command: |
-            go get -u github.com/go-sql-driver/mysql
-            go get -u github.com/jmoiron/sqlx
-            go build -o main
+            go build -o server
       - save_cache:
           key: hitokoto-v1-{{ checksum "config_sample.json" }}
           paths:
-            - main
-
-  deploy:
-    <<: *defaults
-    steps:
-      - checkout
-      - restore_cache:
-          keys:
-            - hitokoto-v1-{{ checksum "config_sample.json" }}
-      - deploy:
-          name: Deploy
-          command: |
-            mkdir -p ~/.ssh
-            touch ~/.ssh/known_hosts
-            #{ ssh-keyscan $SSH_IP 2> /dev/null; } >> ~/.ssh/known_hosts
-            #scp main $SSH_USER@$SSH_IP:/root/API/main
+            - server
 
 workflows:
   version: 2
@@ -41,6 +24,3 @@ workflows:
   Hito-CI:
     jobs:
       - build
-      - deploy:
-          requires:
-            - build
