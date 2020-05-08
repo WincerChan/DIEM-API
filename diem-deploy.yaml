@@ -11,7 +11,7 @@ spec:
                 app: diem
         spec:
             containers:
-            - image: loerfy/diem:v2.4
+            - image: loerfy/apis:latest
               name: redis
               imagePullPolicy: IfNotPresent
               env:
