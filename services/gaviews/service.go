@@ -1,23 +1,17 @@
-package services
+package gaviews
 
 import (
 	C "DIEM-API/config"
 	T "DIEM-API/tools"
 	"context"
-	"github.com/gin-gonic/gin"
 	gar "google.golang.org/api/analyticsreporting/v4"
 	"google.golang.org/api/option"
 	"io/ioutil"
 	"os"
 )
 
-type gaparams struct {
+type Params struct {
 	Prefix string `form:"prefix"`
-}
-
-type View struct {
-	Path  string `json:"path"`
-	Count int    `json:"count"`
 }
 
 type ReportResponse struct {
@@ -25,15 +19,19 @@ type ReportResponse struct {
 	Total   int    `json:"total"`
 }
 
+type View struct {
+	Path  string `json:"path"`
+	Count int    `json:"count"`
+}
+
 var analyticsreportingService *gar.Service
 
 func init() {
 	ctx := context.Background()
-	json := parseCredentialJSON()
+	json := ParseCredentialJSON()
 	analyticsreportingService, _ = gar.NewService(ctx, option.WithCredentialsJSON(json))
 }
-
-func parseCredentialJSON() []byte {
+func ParseCredentialJSON() []byte {
 	jsonFile, _ := os.Open("./credential.json")
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)
@@ -41,16 +39,7 @@ func parseCredentialJSON() []byte {
 	return byteValue
 }
 
-func getViews(ctx *gin.Context) *gar.ReportRequest {
-	p := new(gaparams)
-	err := ctx.Bind(p)
-
-	if err != nil {
-		ctx.JSON(400, gin.H{
-			"error": err.Error(),
-		})
-		ctx.Abort()
-	}
+func GetPathReport(p *Params) *gar.ReportRequest {
 	reportParams := new(gar.ReportRequest)
 	reportParams.ViewId = C.GAViewID
 	reportParams.DateRanges = []*gar.DateRange{&gar.DateRange{StartDate: "2017-06-18", EndDate: "today"}}
@@ -66,11 +55,10 @@ func getViews(ctx *gin.Context) *gar.ReportRequest {
 			},
 		},
 	}
-
 	return reportParams
 }
 
-func validateResponse(response *gar.GetReportsResponse) (rr ReportResponse) {
+func SimplifiedResponse(response *gar.GetReportsResponse) (rr *ReportResponse) {
 	for _, report := range response.Reports {
 		rr.Total = T.Int(report.Data.Totals[0].Values[0])
 		rr.Details = make([]View, report.Data.RowCount)
@@ -81,8 +69,9 @@ func validateResponse(response *gar.GetReportsResponse) (rr ReportResponse) {
 	return
 }
 
-func GAViews(ctx *gin.Context) {
-	report := getViews(ctx)
+func GetPageViews(p *Params, pageView *ReportResponse) {
+
+	report := GetPathReport(p)
 	req := &gar.GetReportsRequest{
 		ReportRequests: []*gar.ReportRequest{
 			report,
@@ -90,5 +79,5 @@ func GAViews(ctx *gin.Context) {
 	}
 	resp, err := analyticsreportingService.Reports.BatchGet(req).Do()
 	T.CheckException(err, "Failed to get analytics report.")
-	ctx.JSON(200, validateResponse(resp))
+	pageView = SimplifiedResponse(resp)
 }
