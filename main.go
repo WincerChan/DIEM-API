@@ -13,6 +13,7 @@ import (
 )
 
 func main() {
+	F.InitConfig()
 	r := gin.New()
 	r.Use(L.Log)
 	r.Use(R.Recover)

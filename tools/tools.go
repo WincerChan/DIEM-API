@@ -3,6 +3,8 @@ package tools
 import (
 	Logf "DIEM-API/tools/logfactory"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strconv"
 )
 
@@ -37,4 +39,16 @@ func Int(arg interface{}) (ret int) {
 
 	}
 	return
+}
+
+func LoadJSON(JSONPath string) []byte {
+	jsonFile, err := os.Open(JSONPath)
+
+	CheckFatalError(err, false)
+
+	byteValue, err := ioutil.ReadAll(jsonFile)
+
+	CheckFatalError(err, false)
+
+	return byteValue
 }

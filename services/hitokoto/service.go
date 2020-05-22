@@ -18,9 +18,9 @@ type HitoInfo struct {
 }
 
 // override Scan implementation for Row.
-func (h HitoInfo) Value() []byte {
-	result, _ := json.Marshal(h)
-	return result
+func (h HitoInfo) Value() ([]byte, error) {
+	result, err := json.Marshal(h)
+	return result, err
 }
 
 // override Scan implementation for Row.
