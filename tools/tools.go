@@ -8,18 +8,21 @@ import (
 	"strconv"
 )
 
+// check exception, just log. can't crash the service
 func CheckException(err error, message string) {
 	if err != nil {
 		Logf.Error.Error().Msg(message)
 	}
 }
 
+// check error, if not mute, crash the service
 func CheckFatalError(err error, mute bool) {
 	if err != nil && !mute {
 		panic(err)
 	}
 }
 
+// cast some type to string
 func Str(arg interface{}) (ret string) {
 	switch arg.(type) {
 	case int64:
@@ -32,6 +35,7 @@ func Str(arg interface{}) (ret string) {
 	return
 }
 
+// cast some type to int
 func Int(arg interface{}) (ret int) {
 	switch arg.(type) {
 	case string:
@@ -41,13 +45,12 @@ func Int(arg interface{}) (ret int) {
 	return
 }
 
+// load json file
 func LoadJSON(JSONPath string) []byte {
 	jsonFile, err := os.Open(JSONPath)
-
 	CheckFatalError(err, false)
 
 	byteValue, err := ioutil.ReadAll(jsonFile)
-
 	CheckFatalError(err, false)
 
 	return byteValue
