@@ -43,7 +43,7 @@ func initRedis() {
 	EnabledRedis = true
 }
 
-// load config file from disk.
+// load config file(`config.yaml`) from disk.
 func loadConfig() {
 	viper.SetConfigName("config")
 	viper.AddConfigPath(".")
@@ -67,6 +67,7 @@ func initPG() {
 	T.CheckFatalError(err, false)
 }
 
+// init Google Analytics credential
 func initCredential() {
 	ctx := context.Background()
 	json := T.LoadJSON("./credential.json")

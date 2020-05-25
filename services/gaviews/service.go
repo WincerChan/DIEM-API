@@ -6,20 +6,24 @@ import (
 	gar "google.golang.org/api/analyticsreporting/v4"
 )
 
+// gaviews url params
 type Params struct {
 	Prefix string `form:"prefix"`
 }
 
+// gaviews response format
 type ReportResponse struct {
-	Details []View `json:"details"`
-	Total   int    `json:"total"`
+	Details []accessInfo `json:"details"`
+	Total   int          `json:"total"`
 }
 
-type View struct {
+//gaviews every page access info format
+type accessInfo struct {
 	Path  string `json:"path"`
 	Count int    `json:"count"`
 }
 
+// the google analytics request report template
 func GetPathReport(p *Params, viewID string) *gar.ReportRequest {
 	reportParams := new(gar.ReportRequest)
 	reportParams.ViewId = viewID
@@ -39,13 +43,14 @@ func GetPathReport(p *Params, viewID string) *gar.ReportRequest {
 	return reportParams
 }
 
+// remove some field that don't need
 func SimplifiedResponse(response *gar.GetReportsResponse) (rr ReportResponse) {
 	rr = *new(ReportResponse)
 	for _, report := range response.Reports {
 		rr.Total = T.Int(report.Data.Totals[0].Values[0])
-		rr.Details = make([]View, report.Data.RowCount)
+		rr.Details = make([]accessInfo, report.Data.RowCount)
 		for i, row := range report.Data.Rows {
-			rr.Details[i] = View{Path: row.Dimensions[0], Count: T.Int(row.Metrics[0].Values[0])}
+			rr.Details[i] = accessInfo{Path: row.Dimensions[0], Count: T.Int(row.Metrics[0].Values[0])}
 		}
 	}
 	return
