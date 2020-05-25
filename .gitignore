@@ -20,3 +20,4 @@ server
 id_rsa
 .directory
 _log/
+credential.json
