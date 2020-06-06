@@ -21,3 +21,4 @@ id_rsa
 .directory
 _log/
 credential.json
+.DS_Store
