@@ -11,15 +11,21 @@ import (
 	gar "google.golang.org/api/analyticsreporting/v4"
 	"google.golang.org/api/option"
 
+	// postgres library
 	_ "github.com/lib/pq"
 )
 
 var (
-	RedisCli                  *redis.Client
-	EnabledRedis              bool
-	PGConn                    *sqlx.DB
-	GAViewID                  string
-	err                       error
+	// RedisCli is in package scope variable
+	RedisCli *redis.Client
+	// EnabledRedis is same as before
+	EnabledRedis bool
+	// PGConn is same as before
+	PGConn *sqlx.DB
+	// GAViewID is same as before
+	GAViewID string
+	err      error
+	// AnalyticsReportingService is same as before
 	AnalyticsReportingService *gar.Service
 )
 
@@ -75,6 +81,7 @@ func initCredential() {
 	T.CheckFatalError(err, false)
 }
 
+// InitConfig init all config
 func InitConfig() {
 	loadConfig()
 	initPG()
