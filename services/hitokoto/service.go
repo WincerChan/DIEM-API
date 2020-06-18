@@ -4,6 +4,7 @@ import (
 	C "DIEM-API/config"
 	"encoding/json"
 	"errors"
+	"math/rand"
 )
 
 type Params struct {
@@ -34,6 +35,7 @@ func (h *HitoInfo) Scan(value interface{}) error {
 
 // fetch hitokoto from database
 func FetchHitokoto(info *HitoInfo, length int) {
-	row := C.PGConn.QueryRow("SELECT RANDOMFETCH($1);", length)
+	seed := rand.Float32()
+	row := C.PGConn.QueryRow("SELECT RANDOMFETCH($1, $2);", length, seed)
 	row.Scan(info)
 }
