@@ -16,6 +16,9 @@ image:https://img.shields.io/github/languages/code-size/WincerChan/Hitokoto.svg?
 
 == 部署
 
+[quote]
+数据库相关的存储过程及操作见 `_sql` 文件夹。
+
 === 普通部署
 
 clone 本仓库并在 `config.yaml` 填入 PostgreSQL 的用户名、密码，Redis 的地址、密码等（格式参考 config_sample.yaml），*Redis 需载入 https://github.com/brandur/redis-cell[redis-cell] 模块*。
