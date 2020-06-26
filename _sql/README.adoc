@@ -1,0 +1,9 @@
+当前目录下存放有关数据库的脚本：
+
+1. `randomfetch.sql` 是 PostgreSQL 的存储过程，用来随机取出一言数据；
+
+2. `re-depoly.sql` 是将 hitokoto 表里的数据按 length 重新排序；
+
+3. `re-depoly.fish` 是创建 hito_len_count 表，描述一言长度对应的条数，为了加速携带 length 参数的查询。
+
+sql 文件依次粘贴到 psql 中执行，fish 文件使用 fish shell 执行。
