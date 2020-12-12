@@ -21,7 +21,7 @@ func (d *RPCDecode) getLength() (size int) {
 }
 
 func (d *RPCDecode) decodeFloat() (value float64) {
-	d.cursor += 1 + 8
+	d.cursor += 1 + 4
 	valuePart := d.data[d.cursor : d.cursor+8]
 	bits := binary.BigEndian.Uint64(valuePart)
 	value = math.Float64frombits(bits)
@@ -32,7 +32,7 @@ func (d *RPCDecode) decodeFloat() (value float64) {
 func (d *RPCDecode) decodeInteger() (value uint32) {
 	d.cursor += 1 + 4
 	valuePart := d.data[d.cursor : d.cursor+4]
-	value = binary.LittleEndian.Uint32(valuePart)
+	value = binary.BigEndian.Uint32(valuePart)
 	d.cursor += 4
 	return
 }
