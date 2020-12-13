@@ -3,7 +3,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"encoding/binary"
 	"log"
 	"math"
@@ -119,30 +118,7 @@ func (c *RPCConn) connect() {
 // 	}
 // }
 
-func (c *RPCConn) sendUntilSucceed(buf *bytes.Buffer, conn net.Conn, reader *bufio.Reader) {
-	// buf.WriteTo(c.conn)
-	// r := *reader
-	// ret, n, err := r.ReadLine()
-	// ret, _, err := c.reader.ReadLine()
-	// ret := make([]byte, 128)
-	// log.Println(ret)
-	// n, err := conn.Read(ret)
-	// var ret []byte
-	// var err error
-	// for ret, _, err = c.reader.ReadLine(); len(ret) == 0 && err != nil; {
-	// 	log.Println(ret)
-	// 	c.signal <- err
-	// 	// sleep 2ms
-	// 	time.Sleep(time.Second * 10)
-	// 	buf.WriteTo(c.conn)
-	// }
-
-	// rpcDecode := new(RPCDecode)
-	// rpcDecode.data = ret
-	// rpcDecode.extract()
-}
-
-func (r *RPCEncode) send(conn *Conn) {
+func (r *RPCEncode) send(conn *net.TCPConn) {
 	// c := new(RPCConn)
 	// c := GetCONN()
 	// var err error
@@ -154,57 +130,36 @@ func (r *RPCEncode) send(conn *Conn) {
 	r.buffer.Write([]byte("\r\n"))
 	line := r.buffer.Bytes()
 	// size := make([]byte, 4)
-	conn.netConn.Write(line)
+	conn.Write(line)
 	// io.ReadFull(conn, size)
 	// len := binary.BigEndian.Uint32(size)
-	// body := make([]byte, len)
+	body := make([]byte, 64)
 	// io.ReadFull(conn, body)
-	_, err := conn.reader.ReadLine()
-	if err != nil {
-		log.Println("fhsk", err)
-	}
+	conn.Read(body)
+	d := &RPCDecode{data: body}
+	log.Println(d.extract())
 	// c.sendUntilSucceed(&r.buffer, conn, reader)
 }
 
-func Choke(key string, total int, speed float64, p *ConnPool) {
-	ctx := context.Background()
+func Choke(key string, total int, speed float64, p *Pool) {
 	rpc := new(RPCEncode)
 	rpc.encodeAtom("choke")
 	rpc.encodeString(key)
 	rpc.encodeInteger(uint32(total))
 	rpc.encodeFloat(speed)
-	conn, err := p.Get(ctx)
-	if err != nil {
-		log.Println("ghfjikdjgnkh", err)
-	}
+	conn := p.Get()
 	rpc.send(conn)
-	log.Println("conns: len(conns)", p.idleConnsLen)
 	defer func() {
-		p.Put(ctx, conn)
+		p.Put(conn)
 		wg.Done()
 	}()
 }
 
-func dummyDialer(context.Context) (net.Conn, error) {
-	c, err := net.Dial("tcp", "10.0.0.86:4004")
-	if err != nil {
-		log.Println(err)
-	}
-	return c, nil
-}
-
 func main() {
 	times, _ := strconv.Atoi(os.Args[1])
-	start := time.Now()
-	p := NewConnPool(&Options{
-		Dialer:             dummyDialer,
-		PoolSize:           20,
-		PoolTimeout:        time.Hour,
-		IdleTimeout:        time.Millisecond,
-		IdleCheckFrequency: time.Millisecond,
-	})
+	p := NewPool(10, "127.0.0.1:4004", DialTCP)
 	wg.Add(times)
-	// reader := bufio.NewReader(conn)
+	start := time.Now()
 	for i := 0; i < times; i++ {
 		go Choke("10.0.9.8", 3, 0.1, p)
 	}

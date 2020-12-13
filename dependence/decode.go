@@ -37,16 +37,18 @@ func (d *RPCDecode) decodeInteger() (value uint32) {
 	return
 }
 
-func (d *RPCDecode) extract() {
+func (d *RPCDecode) extract() []interface{} {
+	results := make([]interface{}, 0)
 outside:
 	for d.cursor < len(d.data) {
 		switch d.data[d.cursor] {
 		case 2:
-			d.decodeInteger()
+			results = append(results, d.decodeInteger())
 		case 3:
-			d.decodeFloat()
+			results = append(results, d.decodeFloat())
 		default:
 			break outside
 		}
 	}
+	return results
 }
