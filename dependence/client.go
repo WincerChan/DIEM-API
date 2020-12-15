@@ -62,6 +62,11 @@ func (r *RPCEncode) setLength(value uint32) {
 	binary.BigEndian.PutUint32(data, value)
 	r.buffer.Write(data)
 }
+func (r *RPCEncode) getLength(value uint32) []byte {
+	data := make([]byte, 4)
+	binary.BigEndian.PutUint32(data, value)
+	return data
+}
 
 func (r *RPCEncode) encodeString(value string) {
 	r.buffer.WriteByte(DELIMITER)
@@ -130,7 +135,9 @@ func (r *RPCEncode) send(conn *Conn) {
 	r.buffer.Write([]byte("\r\n"))
 	line := r.buffer.Bytes()
 	// size := make([]byte, 4)
-	conn.netConn.Write(line)
+	size := r.getLength(uint32(len(line)))
+	line = append(size, line...)
+	conn.WriteLine(line)
 	// io.ReadFull(conn, size)
 	// len := binary.BigEndian.Uint32(size)
 	// io.ReadFull(conn, body)
@@ -156,11 +163,11 @@ func Choke(key string, total int, speed float64, p *Pool) {
 
 func main() {
 	times, _ := strconv.Atoi(os.Args[1])
-	p := NewPool(10, "10.0.0.86:4004", DialTCP)
+	p := NewPool(20, "127.0.0.1:4004", DialTCP)
 	wg.Add(times)
 	start := time.Now()
 	for i := 0; i < times; i++ {
-		go Choke("10.0.9.8", 9, 0.1, p)
+		go Choke("fukdshu", 3, 0.1, p)
 	}
 	wg.Wait()
 	log.Println(time.Since(start))

@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"encoding/binary"
+	"io"
 	"log"
 	"net"
 	"sync"
@@ -63,17 +65,15 @@ func (c *Conn) WriteLine(line []byte) {
 }
 
 func (c *Conn) ReadLine() []byte {
-	data, err := c.reader.ReadSlice(255)
+	prefix, _ := c.reader.Peek(4)
+	size := binary.BigEndian.Uint32(prefix)
+	data := make([]byte, size+4)
+	_, err := io.ReadFull(c.reader, data)
 	if err != nil {
 		log.Println(err)
 	}
-	// if c.reader.Buffered() > 0 {
-	// 	for data[len(data)-2] != 0 {
-	// 		line, _ := c.reader.ReadSlice(255)
-	// 		data = append(data, line...)
-	// 	}
-	// }
-	return data
+	log.Println(data)
+	return data[4:]
 }
 
 func (p *Pool) Get() *Conn {
