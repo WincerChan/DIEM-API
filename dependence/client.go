@@ -118,7 +118,7 @@ func (c *RPCConn) connect() {
 // 	}
 // }
 
-func (r *RPCEncode) send(conn *net.TCPConn) {
+func (r *RPCEncode) send(conn *Conn) {
 	// c := new(RPCConn)
 	// c := GetCONN()
 	// var err error
@@ -130,14 +130,13 @@ func (r *RPCEncode) send(conn *net.TCPConn) {
 	r.buffer.Write([]byte("\r\n"))
 	line := r.buffer.Bytes()
 	// size := make([]byte, 4)
-	conn.Write(line)
+	conn.netConn.Write(line)
 	// io.ReadFull(conn, size)
 	// len := binary.BigEndian.Uint32(size)
-	body := make([]byte, 64)
 	// io.ReadFull(conn, body)
-	conn.Read(body)
+	body := conn.ReadLine()
 	d := &RPCDecode{data: body}
-	log.Println(d.extract())
+	d.extract()
 	// c.sendUntilSucceed(&r.buffer, conn, reader)
 }
 
@@ -157,11 +156,11 @@ func Choke(key string, total int, speed float64, p *Pool) {
 
 func main() {
 	times, _ := strconv.Atoi(os.Args[1])
-	p := NewPool(10, "127.0.0.1:4004", DialTCP)
+	p := NewPool(10, "10.0.0.86:4004", DialTCP)
 	wg.Add(times)
 	start := time.Now()
 	for i := 0; i < times; i++ {
-		go Choke("10.0.9.8", 3, 0.1, p)
+		go Choke("10.0.9.8", 9, 0.1, p)
 	}
 	wg.Wait()
 	log.Println(time.Since(start))

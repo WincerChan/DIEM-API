@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"log"
 	"net"
 	"sync"
@@ -22,8 +23,14 @@ type Pool struct {
 }
 
 type ConnNode struct {
-	c    *net.TCPConn
+	c    *Conn
 	next *ConnNode
+}
+
+type Conn struct {
+	netConn *net.TCPConn
+	reader  *bufio.Reader
+	writer  *bufio.Writer
 }
 
 func NewPool(poolSize int, Addr string, dial func(string) (*net.TCPConn, error)) *Pool {
@@ -50,12 +57,31 @@ func DialTCP(addr string) (*net.TCPConn, error) {
 	return conn, nil
 }
 
-func (p *Pool) Get() *net.TCPConn {
+func (c *Conn) WriteLine(line []byte) {
+	c.writer.Write(line)
+	c.writer.Flush()
+}
+
+func (c *Conn) ReadLine() []byte {
+	data, err := c.reader.ReadSlice(255)
+	if err != nil {
+		log.Println(err)
+	}
+	// if c.reader.Buffered() > 0 {
+	// 	for data[len(data)-2] != 0 {
+	// 		line, _ := c.reader.ReadSlice(255)
+	// 		data = append(data, line...)
+	// 	}
+	// }
+	return data
+}
+
+func (p *Pool) Get() *Conn {
 	c := p.popIdle()
 	return c
 }
 
-func (p *Pool) Put(c *net.TCPConn) {
+func (p *Pool) Put(c *Conn) {
 	p.pushIdle(c)
 }
 
@@ -66,7 +92,7 @@ func (p *Pool) fillUp() {
 	}
 }
 
-func (p *Pool) pushIdle(c *net.TCPConn) {
+func (p *Pool) pushIdle(c *Conn) {
 	cn := &ConnNode{c: c}
 	p.mutex.Lock()
 	if p.headConn == nil {
@@ -80,7 +106,7 @@ func (p *Pool) pushIdle(c *net.TCPConn) {
 	p.mutex.Unlock()
 }
 
-func (p *Pool) popIdle() *net.TCPConn {
+func (p *Pool) popIdle() *Conn {
 	for {
 		select {
 		case <-p.queue:
@@ -100,10 +126,15 @@ func (p *Pool) popIdle() *net.TCPConn {
 	}
 }
 
-func (p *Pool) newConn() *net.TCPConn {
-	tcpConn, err := p.ops.Dial(p.ops.Addr)
+func (p *Pool) newConn() *Conn {
+	netConn, err := p.ops.Dial(p.ops.Addr)
 	if err != nil {
 		log.Println(err)
 	}
-	return tcpConn
+	conn := &Conn{
+		netConn: netConn,
+		reader:  bufio.NewReader(netConn),
+		writer:  bufio.NewWriter(netConn),
+	}
+	return conn
 }
