@@ -3,16 +3,19 @@ package config
 import (
 	T "DIEM-API/tools"
 	DNSTool "DIEM-API/tools/dnslookup"
+	"bytes"
 	"context"
-	"fmt"
+	"encoding/binary"
+	"encoding/gob"
+
 	"github.com/go-redis/redis/v7"
-	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
 	gar "google.golang.org/api/analyticsreporting/v4"
 	"google.golang.org/api/option"
 
 	// postgres library
 	_ "github.com/lib/pq"
+	bolt "go.etcd.io/bbolt"
 )
 
 var (
@@ -20,13 +23,14 @@ var (
 	RedisCli *redis.Client
 	// EnabledRedis is same as before
 	EnabledRedis bool
-	// PGConn is same as before
-	PGConn *sqlx.DB
+	// BoltConn is same as before
+	BoltConn *bolt.DB
 	// GAViewID is same as before
 	GAViewID string
 	err      error
 	// AnalyticsReportingService is same as before
 	AnalyticsReportingService *gar.Service
+	HitokotoMapping           map[int]int
 )
 
 // init redis connection
@@ -58,19 +62,26 @@ func loadConfig() {
 	GAViewID = viper.GetString("google.analytics_id")
 }
 
-// init PostgreSQL connection
-func initPG() {
-	host := DNSTool.ResolveOne(viper.GetString("postgres.host"))
-	pgInfo := fmt.Sprintf(
-		"host=%s user=%s port=%d dbname=%s sslmode=%s password=%s",
-		host,
-		viper.GetString("postgres.user"),
-		viper.GetInt("postgres.port"),
-		viper.GetString("postgres.database"),
-		viper.GetString("postgres.sslmode"),
-		viper.GetString("postgres.password"))
-	PGConn, err = sqlx.Connect("postgres", pgInfo)
+func initBolt() {
+	HitokotoMapping = make(map[int]int)
+	BoltConn, err = bolt.Open("/tmp/bbolt", 0666, &bolt.Options{ReadOnly: true})
 	T.CheckFatalError(err, false)
+	BoltConn.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("hitokoto"))
+		preLength := 0
+		b.ForEach(func(k, v []byte) error {
+			id := binary.BigEndian.Uint32(k)
+			buf, r := new(bytes.Buffer), new(Record)
+			buf.Write(v)
+			gob.NewDecoder(buf).Decode(&r)
+			if r.Length != preLength {
+				HitokotoMapping[r.Length] = int(id)
+			}
+			preLength = r.Length
+			return nil
+		})
+		return nil
+	})
 }
 
 // init Google Analytics credential
@@ -84,7 +95,7 @@ func initCredential() {
 // InitConfig init all config
 func InitConfig() {
 	loadConfig()
-	initPG()
 	initRedis()
+	initBolt()
 	initCredential()
 }
