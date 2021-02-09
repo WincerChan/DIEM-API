@@ -2,6 +2,7 @@ package tools
 
 import (
 	Logf "DIEM-API/tools/logfactory"
+	"encoding/binary"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -54,4 +55,10 @@ func LoadJSON(JSONPath string) []byte {
 	CheckFatalError(err, false)
 
 	return byteValue
+}
+
+func Int32ToBytes(num int) []byte {
+	key := make([]byte, 4)
+	binary.BigEndian.PutUint32(key, uint32(num))
+	return key
 }

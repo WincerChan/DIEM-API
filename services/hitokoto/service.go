@@ -2,40 +2,31 @@ package hitokoto
 
 import (
 	C "DIEM-API/config"
-	"encoding/json"
-	"errors"
+	T "DIEM-API/tools"
 	"math/rand"
+
+	bolt "go.etcd.io/bbolt"
 )
 
-type Params struct {
-	Length   int    `form:"length"`
-	Callback string `form:"callback"`
-	Encode   string `form:"encode"`
-}
+// MAXRECORD number of hitokoto
+const MAXRECORD = 15348
 
-type HitoInfo struct {
-	Source string `json:"source"`
-	Hito   string `json:"hitokoto"`
-}
-
-// override Scan implementation for Row.
-func (h HitoInfo) Value() ([]byte, error) {
-	result, err := json.Marshal(h)
-	return result, err
-}
-
-// override Scan implementation for Row.
-func (h *HitoInfo) Scan(value interface{}) error {
-	b, ok := value.([]byte)
-	if !ok {
-		return errors.New("type assertion to []byte failed")
+func getOffset(length int) (offset int) {
+	if val, ok := C.HitokotoMapping[length]; ok {
+		offset = rand.Intn(val)
+	} else {
+		offset = rand.Intn(MAXRECORD)
 	}
-	return json.Unmarshal(b, &h)
+	return
 }
 
 // fetch hitokoto from database
-func FetchHitokoto(info *HitoInfo, length int) {
-	seed := rand.Float32()
-	row := C.PGConn.QueryRow("SELECT RANDOMFETCH($1, $2);", length, seed)
-	row.Scan(info)
+func FetchHitokoto(length int) *C.HitoInfo {
+	key, record := T.Int32ToBytes(getOffset(length)), new(C.Record)
+	C.BoltConn.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte("hitokoto"))
+		record.LoadFromBytes(b.Get(key))
+		return nil
+	})
+	return &record.Hitokoto
 }

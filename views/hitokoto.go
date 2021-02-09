@@ -1,25 +1,26 @@
 package views
 
 import (
+	C "DIEM-API/config"
 	service "DIEM-API/services/hitokoto"
 	"bytes"
 
 	"github.com/gin-gonic/gin"
 )
 
-func JSONFormat(ctx *gin.Context, info *service.HitoInfo) {
+func JSONFormat(ctx *gin.Context, info *C.HitoInfo) {
 	ctx.JSON(200, info)
 }
 
-func PlainFormat(ctx *gin.Context, info *service.HitoInfo) {
+func PlainFormat(ctx *gin.Context, info *C.HitoInfo) {
 	ctx.String(200, info.Hito+"——「"+info.Source+"」")
 }
 
-func JSONP(ctx *gin.Context, info *service.HitoInfo) {
+func JSONP(ctx *gin.Context, info *C.HitoInfo) {
 	ctx.JSONP(200, info)
 }
 
-func JSFormat(ctx *gin.Context, info *service.HitoInfo) {
+func JSFormat(ctx *gin.Context, info *C.HitoInfo) {
 	var buf bytes.Buffer
 	buf.WriteString("var hitokoto=\"")
 	buf.WriteString(info.Hito)
@@ -31,7 +32,7 @@ func JSFormat(ctx *gin.Context, info *service.HitoInfo) {
 }
 
 // attempt to bind url params
-func checkParams(ctx *gin.Context, p *service.Params) {
+func checkParams(ctx *gin.Context, p *C.Params) {
 	err := ctx.Bind(p)
 
 	if err != nil {
@@ -43,12 +44,10 @@ func checkParams(ctx *gin.Context, p *service.Params) {
 }
 
 func Hitokoto(ctx *gin.Context) {
-	p := new(service.Params)
-	info := new(service.HitoInfo)
+	p := new(C.Params)
 
 	checkParams(ctx, p)
-	service.FetchHitokoto(info, p.Length)
-
+	info := service.FetchHitokoto(p.Length)
 	if p.Callback != "" {
 		JSONP(ctx, info)
 	} else if p.Encode == "js" {
