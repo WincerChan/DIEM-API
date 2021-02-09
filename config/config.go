@@ -13,8 +13,6 @@ import (
 	gar "google.golang.org/api/analyticsreporting/v4"
 	"google.golang.org/api/option"
 
-	// postgres library
-	_ "github.com/lib/pq"
 	bolt "go.etcd.io/bbolt"
 )
 
