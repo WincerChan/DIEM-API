@@ -1,16 +1,8 @@
-postgres:
-  user: postgres
-  password:
-  port: 15432
-  host: 127.0.0.1
-  database: api
-  sslmode: disable
-
 redis:
   address: 127.0.0.1:16379
   password:
   db: 0
-  enabled: true
+  enabled: false
 
 google:
   analytics_id: 153425181
