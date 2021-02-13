@@ -1,9 +1,8 @@
-package main
+package rpcserver
 
 import (
 	"bufio"
 	"io"
-	"log"
 )
 
 type Reader struct {
@@ -40,7 +39,6 @@ func (r *Reader) ReadLine() ([]byte, error) {
 
 func (r *Reader) readLine() ([]byte, error) {
 	b, err := r.rd.ReadSlice('\n')
-	log.Println("bytes", b)
 	if err != nil {
 		return nil, err
 	}

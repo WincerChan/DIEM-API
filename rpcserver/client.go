@@ -1,4 +1,4 @@
-package main
+package rpcserver
 
 import (
 	"bufio"
@@ -91,7 +91,7 @@ func (c *RPCConn) connect() {
 	}
 }
 
-func (r *RPCEncode) execute(conn *Conn) {
+func (r *RPCEncode) execute(conn *Conn) []interface{} {
 	r.buffer.Write([]byte("\r\n"))
 	line := r.buffer.Bytes()
 	size := r.getLength(uint32(len(line)))
@@ -99,19 +99,7 @@ func (r *RPCEncode) execute(conn *Conn) {
 	conn.WriteLine(line)
 	body := conn.ReadLine()
 	d := &RPCDecode{data: body}
-	d.extract()
-}
-
-func Choke(key string, total int, speed float64, p *Pool) {
-	rpc := new(RPCEncode)
-	rpc.encodeAtom("choke")
-	rpc.encodeString(key)
-	rpc.encodeInteger(uint32(total))
-	rpc.encodeFloat(speed)
-	conn := p.Get()
-	rpc.execute(conn)
-	p.Put(conn)
-	defer wg.Done()
+	return d.extract()
 }
 
 func main() {
