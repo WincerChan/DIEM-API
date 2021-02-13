@@ -62,6 +62,7 @@ func DialTCP(addr string) (*net.TCPConn, error) {
 func (c *Conn) WriteLine(line []byte) {
 	_, err := c.writer.Write(line)
 	if err != nil {
+		c.closed = true
 		log.Println(err)
 	}
 	c.writer.Flush()
@@ -70,6 +71,7 @@ func (c *Conn) WriteLine(line []byte) {
 func (c *Conn) ReadLine() []byte {
 	prefix, err := c.reader.Peek(4)
 	if err != nil {
+		c.closed = true
 		log.Println(err)
 		return nil
 	}
@@ -92,7 +94,7 @@ func (p *Pool) Get() *Conn {
 func (p *Pool) fillToPool() *Conn {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
-	if len(p.usedConns) < cap(p.usedConns) {
+	if len(p.usedConns) < cap(p.usedConns) && len(p.idleConns) == 0 {
 		c := p.newConn()
 		p.usedConns = append(p.usedConns, c)
 		return c

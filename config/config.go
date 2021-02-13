@@ -3,7 +3,10 @@ package config
 import (
 	RPC "DIEM-API/rpcserver"
 	T "DIEM-API/tools"
+	"bytes"
 	"context"
+	"encoding/binary"
+	"encoding/gob"
 
 	"github.com/go-redis/redis/v7"
 	"github.com/spf13/viper"
@@ -20,7 +23,7 @@ var (
 	EnabledRedis bool
 	// BoltConn is same as before
 	BoltConn *bolt.DB
-	Pool         *RPC.Pool
+	Pool     *RPC.Pool
 	// GAViewID is same as before
 	GAViewID string
 	err      error
@@ -58,6 +61,8 @@ func initBolt() {
 		})
 		return nil
 	})
+}
+
 // init rpc server Connection-Pool
 func initRPCServer() {
 	Pool = RPC.NewPool(
