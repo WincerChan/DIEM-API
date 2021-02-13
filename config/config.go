@@ -1,8 +1,8 @@
 package config
 
 import (
+	RPC "DIEM-API/rpcserver"
 	T "DIEM-API/tools"
-	DNSTool "DIEM-API/tools/dnslookup"
 	"bytes"
 	"context"
 	"encoding/binary"
@@ -23,6 +23,7 @@ var (
 	EnabledRedis bool
 	// BoltConn is same as before
 	BoltConn *bolt.DB
+	Pool     *RPC.Pool
 	// GAViewID is same as before
 	GAViewID string
 	err      error
@@ -30,26 +31,6 @@ var (
 	AnalyticsReportingService *gar.Service
 	HitokotoMapping           map[int]int
 )
-
-// init redis connection
-func initRedis() {
-	if !viper.GetBool("redis.enabled") {
-		return
-	}
-	address := DNSTool.ResolveAddr(viper.GetString("redis.address"))
-	RedisCli = redis.NewClient(&redis.Options{
-		Addr:     address,
-		Password: viper.GetString("redis.password"),
-		DB:       viper.GetInt("redis.db"),
-	})
-	_, err = RedisCli.Ping().Result()
-	T.CheckException(err,
-		"WARNING: Couldn't connect to Redis, please set redis.enabled to false.")
-	_, err = RedisCli.Do("CL.THROTTLE", "", "35", "36", "360").Result()
-	T.CheckException(err,
-		"WARNING: redis-cell module didn't detect, please set redis.enabled to false.")
-	EnabledRedis = true
-}
 
 // load config file(`config.yaml`) from disk.
 func loadConfig() {
@@ -82,6 +63,15 @@ func initBolt() {
 	})
 }
 
+// init rpc server Connection-Pool
+func initRPCServer() {
+	Pool = RPC.NewPool(
+		viper.GetInt("rpc-server.poolsize"),
+		viper.GetString("rpc-server.addr"),
+		RPC.DialTCP,
+	)
+}
+
 // init Google Analytics credential
 func initCredential() {
 	ctx := context.Background()
@@ -93,7 +83,7 @@ func initCredential() {
 // InitConfig init all config
 func InitConfig() {
 	loadConfig()
-	initRedis()
 	initBolt()
+	initRPCServer()
 	initCredential()
 }

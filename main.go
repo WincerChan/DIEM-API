@@ -17,9 +17,7 @@ func main() {
 	r := gin.New()
 	r.Use(L.Log)
 	r.Use(R.Recover)
-	if F.EnabledRedis {
-		r.Use(C.Limiting)
-	}
+	r.Use(C.Limiting)
 	r.GET("/hitokoto/v2/", V.Hitokoto)
 	r.GET("/gaviews/v1/", V.GAViews)
 	r.Run()

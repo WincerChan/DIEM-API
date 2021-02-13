@@ -1,4 +1,4 @@
-package main
+package rpcserver
 
 import (
 	"bufio"
@@ -36,25 +36,6 @@ type RPCConn struct {
 	addr   *net.TCPAddr
 	tmp    bytes.Buffer
 	reader *bufio.Reader
-}
-
-// func GetCONN() *RPCConn {
-// 	rpcConn = new(RPCConn)
-// 	rpcConn.signal = make(chan error)
-// 	addr, _ := net.ResolveTCPAddr("tcp", "10.0.0.86:4004")
-// 	rpcConn.addr = addr
-// 	rpcConn.connect()
-// 	go rpcConn.checkConnect()
-// 	return rpcConn
-// }
-
-func newConn() *RPCConn {
-	addr, _ := net.ResolveTCPAddr("tcp", "10.0.0.86:4004")
-	rpcConn = &RPCConn{
-		addr: addr,
-	}
-	rpcConn.connect()
-	return rpcConn
 }
 
 func (r *RPCEncode) setLength(value uint32) {
@@ -110,64 +91,25 @@ func (c *RPCConn) connect() {
 	}
 }
 
-// func (c *RPCConn) checkConnect() {
-// 	for {
-// 		select {
-// 		case err := <-c.signal:
-// 			fmt.Println("connection failed", err)
-// 			c.connect()
-// 		case <-time.After(time.Second * 10):
-// 			fmt.Println("timeout, still alive")
-// 			c.sendUntilSucceed(&c.tmp)
-// 		}
-// 	}
-// }
-
-func (r *RPCEncode) send(conn *Conn) {
-	// c := new(RPCConn)
-	// c := GetCONN()
-	// var err error
-	// c := new(RPCConn)
-	// c.conn, err = net.Dial("tcp", "10.0.0.86:4004")
-	// if err != nil {
-	// 	log.Println("send error", err)
-	// }
+func (r *RPCEncode) execute(conn *Conn) []interface{} {
 	r.buffer.Write([]byte("\r\n"))
 	line := r.buffer.Bytes()
-	// size := make([]byte, 4)
 	size := r.getLength(uint32(len(line)))
 	line = append(size, line...)
 	conn.WriteLine(line)
-	// io.ReadFull(conn, size)
-	// len := binary.BigEndian.Uint32(size)
-	// io.ReadFull(conn, body)
 	body := conn.ReadLine()
 	d := &RPCDecode{data: body}
-	d.extract()
-	// c.sendUntilSucceed(&r.buffer, conn, reader)
-}
-
-func Choke(key string, total int, speed float64, p *Pool) {
-	rpc := new(RPCEncode)
-	rpc.encodeAtom("choke")
-	rpc.encodeString(key)
-	rpc.encodeInteger(uint32(total))
-	rpc.encodeFloat(speed)
-	conn := p.Get()
-	rpc.send(conn)
-	defer func() {
-		p.Put(conn)
-		wg.Done()
-	}()
+	return d.extract()
 }
 
 func main() {
 	times, _ := strconv.Atoi(os.Args[1])
-	p := NewPool(20, "127.0.0.1:4004", DialTCP)
+	p := NewPool(10, "127.0.0.1:4004", DialTCP)
 	wg.Add(times)
 	start := time.Now()
 	for i := 0; i < times; i++ {
-		go Choke("fukdshu", 3, 0.1, p)
+		k := strconv.Itoa(i % 3000)
+		go Choke(k, 8, 0.1, p)
 	}
 	wg.Wait()
 	log.Println(time.Since(start))
