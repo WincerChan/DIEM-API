@@ -26,8 +26,6 @@ func Recover(c *gin.Context) {
 		e := r.(error)
 		c.Error(errors.New(e.Error()))
 
-		c.String(500, "Internal Error")
-
 	}()
 	c.Next()
 }
