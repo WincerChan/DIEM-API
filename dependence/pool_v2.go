@@ -20,17 +20,10 @@ type Pool struct {
 	ops   *Options
 	mutex sync.Mutex
 	queue chan struct{}
-	// idle connections length
-	idleConnsLen int
-	// idle connection linkedlist
-	headConn, lastCoon *ConnNode
+	// idle connections in pool
+	idleConns []*Conn
 	// all connections in pool
-	allConns []*Conn
-}
-
-type ConnNode struct {
-	c    *Conn
-	next *ConnNode
+	usedConns []*Conn
 }
 
 type Conn struct {
@@ -47,10 +40,10 @@ func NewPool(poolSize int, Addr string, dial func(string) (*net.TCPConn, error))
 			PoolSize: poolSize,
 			Addr:     Addr,
 		},
-		queue:    make(chan struct{}, poolSize),
-		allConns: make([]*Conn, 0),
+		queue:     make(chan struct{}, poolSize),
+		usedConns: make([]*Conn, 0, poolSize),
+		idleConns: make([]*Conn, 0, poolSize),
 	}
-	// add conn to pool.
 	return p
 }
 
@@ -70,7 +63,6 @@ func (c *Conn) WriteLine(line []byte) {
 	_, err := c.writer.Write(line)
 	if err != nil {
 		log.Println(err)
-		return
 	}
 	c.writer.Flush()
 }
@@ -100,9 +92,9 @@ func (p *Pool) Get() *Conn {
 func (p *Pool) fillToPool() *Conn {
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
-	if p.idleConnsLen == 0 && len(p.allConns) < p.ops.PoolSize {
+	if len(p.usedConns) < cap(p.usedConns) {
 		c := p.newConn()
-		p.allConns = append(p.allConns, c)
+		p.usedConns = append(p.usedConns, c)
 		return c
 	}
 	return nil
@@ -120,14 +112,7 @@ func (p *Pool) Put(c *Conn) {
 
 func (p *Pool) pushIdle(c *Conn) {
 	p.mutex.Lock()
-	cn := &ConnNode{c: c}
-	if p.headConn == nil {
-		p.headConn = cn
-	} else {
-		p.lastCoon.next = cn
-	}
-	p.lastCoon = cn
-	p.idleConnsLen++
+	p.idleConns = append(p.idleConns, c)
 	p.mutex.Unlock()
 	p.queue <- struct{}{}
 }
@@ -136,41 +121,29 @@ func (p *Pool) popIdle() *Conn {
 	select {
 	case <-p.queue:
 		p.mutex.Lock()
-		cn := p.headConn
-		if p.headConn == p.lastCoon {
-			p.lastCoon = p.lastCoon.next
-		}
-		p.headConn = p.headConn.next
-		p.idleConnsLen--
+		c := p.idleConns[0]
+		p.idleConns = p.idleConns[1:]
 		p.mutex.Unlock()
-		return cn.c
+		return c
 	// All Conns in the pool has been timeout
 	// Create a new one and fill it in the pool
-	case <-time.After(time.Second * 1):
-		log.Println("Creating a new connection")
+	case <-time.After(time.Second * 30):
+		log.Println("All Conn Timeout. Creating a new connection")
+		p.mutex.Lock()
 		c := p.newConn()
-
-		p.replaceFirstConn(c)
+		drop := p.usedConns[0]
+		p.usedConns = append(p.usedConns[1:], c)
+		p.mutex.Unlock()
+		drop.closed = true
+		drop.netConn.Close()
 		return c
 	}
-}
-
-func (p *Pool) replaceFirstConn(c *Conn) {
-	p.mutex.Lock()
-	drop := p.allConns[0]
-	p.allConns = append(p.allConns[1:], c)
-	p.mutex.Unlock()
-	drop.closed = true
-	drop.netConn.CloseRead()
-	drop.netConn.CloseWrite()
-	drop.netConn.Close()
 }
 
 func (p *Pool) newConn() *Conn {
 	netConn, err := p.ops.Dial(p.ops.Addr)
 	if err != nil {
-		log.Println(err)
-		return nil
+		log.Panicln(err)
 	}
 	conn := &Conn{
 		netConn: netConn,
