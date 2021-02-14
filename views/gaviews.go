@@ -1,11 +1,13 @@
 package views
 
 import (
-	service "DIEM-API/services/gaviews"
+	M "DIEM-API/models"
+	G "DIEM-API/models/googleanalytics"
+
 	"github.com/gin-gonic/gin"
 )
 
-func checkGAParams(ctx *gin.Context, p *service.Params) {
+func checkGAParams(ctx *gin.Context, p *G.Params) {
 	err := ctx.Bind(p)
 
 	if err != nil {
@@ -17,10 +19,8 @@ func checkGAParams(ctx *gin.Context, p *service.Params) {
 }
 
 func GAViews(ctx *gin.Context) {
-	p := new(service.Params)
-	pageView := new(service.ReportResponse)
+	p := new(G.Params)
 	checkGAParams(ctx, p)
-
-	service.GetPageViews(p, pageView)
+	pageView := M.GetReport(p)
 	ctx.JSON(200, pageView)
 }
