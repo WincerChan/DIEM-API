@@ -28,7 +28,7 @@ func loadConfig() {
 }
 
 func initDatabase() {
-	D.InitBoltConn("/tmp/bbolt")
+	D.InitBoltConn(viper.GetString("bolt-path"))
 	D.BoltDB.Read(D.InitHitokoto)
 }
 
