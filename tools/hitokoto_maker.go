@@ -64,7 +64,7 @@ func insert(db *bolt.DB, id int, s string) {
 	r.insert(db, uint32(id))
 }
 
-func openFile() {
+func OpenFile() {
 	db, _ := bolt.Open("/tmp/bbolt", 0666, nil)
 	file, err := os.Open("./hito")
 	if err != nil {
