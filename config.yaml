@@ -2,11 +2,7 @@ rpc-server:
   poolsize: 5
   addr: 127.0.0.1:4004
 
-redis:
-  address: 127.0.0.1:16379
-  password:
-  db: 0
-  enabled: false
+bolt-path: /tmp/bbolt
 
 google:
   analytics_id: 153425181
