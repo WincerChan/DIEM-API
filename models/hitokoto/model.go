@@ -50,6 +50,7 @@ func ScanRecordLength(tx *bolt.Tx) error {
 	b := tx.Bucket(HitoBucket)
 	preLength := 0
 	b.ForEach(func(k, v []byte) error {
+		counts++
 		id := binary.BigEndian.Uint32(k)
 		record := LoadRecordFromBytes(v)
 		if record.Length != preLength {
