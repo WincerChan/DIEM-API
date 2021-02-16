@@ -16,3 +16,7 @@ func InitGoogleAnalytics(viewID string) {
 	InitGACredential()
 	G.GAViewID = viewID
 }
+
+func InitMeiliSearch(host, apiKey string) {
+	InitMeiliClient(host, apiKey)
+}
