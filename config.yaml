@@ -4,5 +4,9 @@ rpc-server:
 
 bolt-path: /tmp/bbolt
 
+meilisearch:
+  host: http://127.0.0.1:7700
+  api-key: Jsz678dsHJ67s
+
 google:
   analytics_id: 153425181
