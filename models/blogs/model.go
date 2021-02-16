@@ -2,7 +2,6 @@ package blogs
 
 import (
 	T "DIEM-API/tools"
-	"log"
 	"strings"
 	"time"
 
@@ -75,7 +74,6 @@ func genSnippet(text string, indeces []interface{}) string {
 	for i, index := range indeces {
 		content := index.(map[string]interface{})
 		start := int(content["start"].(float64)) + i*9
-		log.Println(start, end)
 		if start < preStart {
 			continue
 		}

@@ -3,7 +3,6 @@ package views
 import (
 	M "DIEM-API/models"
 	B "DIEM-API/models/blogs"
-	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -40,7 +39,6 @@ func validDateRange(r string) (begin, end int64) {
 	}
 	if r[0] == '-' {
 		endTime, err := time.Parse("20060102", r[1:lenOfTime+1])
-		log.Println(endTime)
 		f(&end, endTime, err)
 	}
 	return
