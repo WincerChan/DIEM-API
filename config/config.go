@@ -30,6 +30,7 @@ func loadConfig() {
 func initDatabase() {
 	D.InitBoltConn(viper.GetString("bolt-path"))
 	D.BoltDB.Read(D.InitHitokoto)
+	D.InitMeiliSearch(viper.GetString("meilisearch.host"), viper.GetString("meilisearch.api-key"))
 }
 
 // init rpc server Connection-Pool
