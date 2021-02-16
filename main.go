@@ -20,5 +20,6 @@ func main() {
 	r.Use(C.Limiting)
 	r.GET("/hitokoto/v2/", V.Hitokoto)
 	r.GET("/gaviews/v1/", V.GAViews)
+	r.GET("/blog-search/v1/", V.BlogSearchViews)
 	r.Run()
 }
