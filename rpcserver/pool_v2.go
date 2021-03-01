@@ -1,6 +1,7 @@
 package rpcserver
 
 import (
+	T "DIEM-API/tools"
 	"bufio"
 	"encoding/binary"
 	"io"
@@ -11,7 +12,7 @@ import (
 )
 
 type Options struct {
-	Dial     func(string) (*net.TCPConn, error)
+	Dial     func(string) (*net.UnixConn, error)
 	PoolSize int
 	Addr     string
 }
@@ -27,13 +28,13 @@ type Pool struct {
 }
 
 type Conn struct {
-	netConn *net.TCPConn
+	netConn *net.UnixConn
 	reader  *bufio.Reader
 	writer  *bufio.Writer
 	closed  bool
 }
 
-func NewPool(poolSize int, Addr string, dial func(string) (*net.TCPConn, error)) *Pool {
+func NewPool(poolSize int, Addr string, dial func(string) (*net.UnixConn, error)) *Pool {
 	p := &Pool{
 		ops: &Options{
 			Dial:     dial,
@@ -47,19 +48,20 @@ func NewPool(poolSize int, Addr string, dial func(string) (*net.TCPConn, error))
 	return p
 }
 
-func DialTCP(addr string) (*net.TCPConn, error) {
-	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+func DialTCP(addr string) (*net.UnixConn, error) {
+	sockFile, err := net.ResolveUnixAddr("unix", addr)
 	if err != nil {
-		return nil, err
+		T.CheckException(err, "resolve unix addr failed.")
 	}
-	conn, err := net.DialTCP("tcp", nil, tcpAddr)
+	conn, err := net.DialUnix("unix", nil, sockFile)
 	if err != nil {
-		return nil, err
+		T.CheckException(err, "dial unix addr failed.")
 	}
 	return conn, nil
 }
 
 func (c *Conn) WriteLine(line []byte) {
+	line = append(line, 10)
 	_, err := c.writer.Write(line)
 	if err != nil {
 		c.closed = true
@@ -69,6 +71,24 @@ func (c *Conn) WriteLine(line []byte) {
 }
 
 func (c *Conn) ReadLine() []byte {
+	k, err := c.reader.ReadBytes(10)
+	if err != nil {
+		c.closed = true
+		log.Println(err)
+	}
+	return k
+}
+
+func (c *Conn) WriteOnce(line []byte) {
+	_, err := c.writer.Write(line)
+	if err != nil {
+		c.closed = true
+		log.Println(err)
+	}
+	c.writer.Flush()
+}
+
+func (c *Conn) ReadOnce() []byte {
 	prefix, err := c.reader.Peek(4)
 	if err != nil {
 		c.closed = true
@@ -85,6 +105,7 @@ func (c *Conn) ReadLine() []byte {
 }
 
 func (p *Pool) Get() *Conn {
+	// log.Println("get a conn")
 	if c := p.fillToPool(); c != nil {
 		return c
 	}
@@ -107,6 +128,7 @@ func (p *Pool) Put(c *Conn) {
 	closed := c.closed
 	p.mutex.Unlock()
 	if closed {
+		log.Println("err closed")
 		return
 	}
 	p.pushIdle(c)
@@ -143,6 +165,7 @@ func (p *Pool) popIdle() *Conn {
 }
 
 func (p *Pool) newConn() *Conn {
+	// log.Println("here new")
 	netConn, err := p.ops.Dial(p.ops.Addr)
 	if err != nil {
 		log.Panicln(err)

@@ -29,7 +29,7 @@ func (r *Reader) Reset(rd io.Reader) {
 	r.rd.Reset(rd)
 }
 
-func (r *Reader) ReadLine() ([]byte, error) {
+func (r *Reader) ReadOnce() ([]byte, error) {
 	line, err := r.readLine()
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func NewWriter(wr writer) *Writer {
 	}
 }
 
-func (w *Writer) WriteLine(line []byte) error {
+func (w *Writer) WriteOnce(line []byte) error {
 	_, err := w.Write(line)
 	return err
 }

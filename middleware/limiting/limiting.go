@@ -10,7 +10,7 @@ import (
 
 // request redis's throttle module for limit-rating info.
 func check(xff string) []interface{} {
-	return I.Choke(xff, 10, 0.1, C.Pool)
+	return I.Choke(xff, 10, 0.1, C.RalPool)
 }
 
 // check if current request is valid

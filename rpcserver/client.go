@@ -80,24 +80,13 @@ func (r *RPCEncode) encodeFloat(value float64) {
 	r.buffer.Write(data)
 }
 
-func (c *RPCConn) connect() {
-	// c.conn, err = net.DialTCP("tcp", nil, c.addr)
-	conn, err := net.Dial("tcp", "10.0.0.86:4004")
-	c.conn = conn
-	c.conn.Write([]byte("fhdkfd"))
-	c.reader = bufio.NewReader(c.conn)
-	if err != nil {
-		log.Fatal("fail to conneciton")
-	}
-}
-
 func (r *RPCEncode) execute(conn *Conn) []interface{} {
 	r.buffer.Write([]byte("\r\n"))
 	line := r.buffer.Bytes()
 	size := r.getLength(uint32(len(line)))
 	line = append(size, line...)
-	conn.WriteLine(line)
-	body := conn.ReadLine()
+	conn.WriteOnce(line)
+	body := conn.ReadOnce()
 	d := &RPCDecode{data: body}
 	return d.extract()
 }

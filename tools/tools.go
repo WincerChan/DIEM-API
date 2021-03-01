@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strconv"
+
+	"github.com/spf13/viper"
 )
 
 // check exception, just log. can't crash the service
@@ -77,4 +80,8 @@ func Max(num1, num2 int) int {
 		return num2
 	}
 	return num1
+}
+
+func ConfigAbsPath(path string) string {
+	return filepath.Join(viper.GetString("work_dir"), path)
 }

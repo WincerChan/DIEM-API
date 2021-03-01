@@ -2,10 +2,11 @@ package logfactory
 
 import (
 	"DIEM-API/tools/filefactory"
-	"github.com/gin-gonic/gin"
-	"github.com/rs/zerolog"
 	"os"
 	"path"
+
+	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog"
 )
 
 var zlogE zerolog.Logger
@@ -19,7 +20,7 @@ var Access = access{}
 var Error = error{}
 var StdErr = stdErr{}
 
-func init() {
+func InitLog(path string) {
 	ginMode := gin.Mode()
 
 	zlogStderr := zerolog.ConsoleWriter{Out: os.Stderr}
@@ -30,8 +31,8 @@ func init() {
 		return
 	}
 
-	zlogError := newFactory("error")
-	zlogAccess := newFactory("access")
+	zlogError := newFactory("error", path)
+	zlogAccess := newFactory("access", path)
 
 	go zlogError.rotate()
 	go zlogAccess.rotate()
@@ -41,7 +42,7 @@ func init() {
 
 }
 
-func newFactory(level string) *factory {
+func newFactory(level, logPath string) *factory {
 	aLogger := new(factory)
 	aLogger.level = level
 	aLogger.fullName = path.Join(logPath, level, level+".log")

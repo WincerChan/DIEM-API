@@ -10,8 +10,6 @@ const (
 	dayHour   = 23
 	dayMinute = 59
 	daySecond = 60
-
-	logPath = "_log"
 )
 
 type factory struct {
