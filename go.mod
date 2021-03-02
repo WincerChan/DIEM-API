@@ -4,7 +4,10 @@ go 1.12
 
 require (
 	github.com/gin-gonic/gin v1.5.0
+	github.com/go-playground/validator v9.31.0+incompatible
+	github.com/go-playground/validator/v10 v10.4.1
 	github.com/go-redis/redis/v7 v7.0.0-beta.4
+	github.com/hashicorp/hcl v1.0.0
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/meilisearch/meilisearch-go v0.14.0
 	github.com/pelletier/go-toml v1.6.0 // indirect

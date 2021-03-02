@@ -39,7 +39,7 @@ func TestInt(t *testing.T) {
 
 func TestLoadJSON(t *testing.T) {
 	var (
-		in = "../credential.json"
+		in = "/home/web/server/api/diem-api/credential.json"
 	)
 	byteValue := LoadJSON(in)
 	if byteValue[0] != 123 {
