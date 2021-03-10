@@ -52,7 +52,7 @@ func execute(ctx *gin.Context) []byte {
 	err := B.BindStruct(ctx.Request.URL.Query(), &p)
 	if err != nil {
 		ctx.JSON(200, gin.H{
-			"Hello world": err.Error(),
+			"error": err.Error(),
 		})
 		ctx.Abort()
 		return []byte{}
