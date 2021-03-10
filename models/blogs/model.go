@@ -24,7 +24,10 @@ func (p *Params) BindPage(str string) string {
 		return "invalid pages format, expected likes: 1-10"
 	}
 	for _, p := range pages {
-		_, err := strconv.Atoi(p)
+		n, err := strconv.Atoi(p)
+		if n <= 0 {
+			return "invalid pages format, page and size must be positive."
+		}
 		if err != nil {
 			return err.Error()
 		}
