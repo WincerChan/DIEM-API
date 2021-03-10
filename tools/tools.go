@@ -83,5 +83,5 @@ func Max(num1, num2 int) int {
 }
 
 func ConfigAbsPath(path string) string {
-	return filepath.Join(viper.GetString("work_dir"), path)
+	return filepath.Join(viper.GetString("config_dir"), path)
 }

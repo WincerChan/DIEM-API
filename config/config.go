@@ -20,10 +20,19 @@ var (
 	AnalyticsReportingService *gar.Service
 )
 
+func checkConfig() string {
+	path := os.Getenv("CONFIG")
+	if path == "" {
+		println("Please set environment variable `CONFIG`")
+		os.Exit(1)
+	}
+	return path
+}
+
 // load config file(`config.yaml`) from disk.
 func loadConfig() {
 	viper.SetConfigName("config")
-	viper.AddConfigPath(os.Getenv("CONFIG"))
+	viper.AddConfigPath(checkConfig())
 	err = viper.ReadInConfig()
 	T.CheckFatalError(err, false)
 	id := viper.GetString("google.analytics_id")
@@ -45,7 +54,7 @@ func initRPCServer() {
 	)
 	SearchPool = RPC.NewPool(
 		viper.GetInt("search.poolsize"),
-		viper.GetString("search.addr"),
+		T.ConfigAbsPath(viper.GetString("search.addr")),
 		RPC.DialTCP,
 	)
 }
