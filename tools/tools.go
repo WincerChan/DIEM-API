@@ -6,10 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strconv"
-
-	"github.com/spf13/viper"
 )
 
 // check exception, just log. can't crash the service
@@ -37,6 +34,8 @@ func Str(arg interface{}) (ret string) {
 		ret = fmt.Sprintf("%.1f", arg.(float64))
 	case uint32:
 		ret = strconv.Itoa(int(arg.(uint32)))
+	case string:
+		ret = arg.(string)
 	}
 	return
 }
@@ -46,7 +45,8 @@ func Int(arg interface{}) (ret int) {
 	switch arg.(type) {
 	case string:
 		ret, _ = strconv.Atoi(arg.(string))
-
+	case int64:
+		ret = int(arg.(int64))
 	}
 	return
 }
@@ -80,8 +80,4 @@ func Max(num1, num2 int) int {
 		return num2
 	}
 	return num1
-}
-
-func ConfigAbsPath(path string) string {
-	return filepath.Join(viper.GetString("config_dir"), path)
 }
