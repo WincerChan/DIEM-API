@@ -12,7 +12,7 @@ func InitHitokoto(tx *bolt.Tx) error {
 	return H.ScanRecordLength(tx)
 }
 
-func InitGoogleAnalytics(viewID string) {
-	InitGACredential()
+func InitGoogleAnalytics(viewID, filepath string) {
+	InitGACredential(filepath)
 	G.GAViewID = viewID
 }

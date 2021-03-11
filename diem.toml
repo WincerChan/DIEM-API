@@ -1,0 +1,16 @@
+config_dir = "/Users/loerfy/opts"
+
+bolt-path = "bbolt"
+log-path = "_logs"
+
+[rpc-server]
+poolsize = 5
+addr = "ral.sock"
+
+[search]
+poolsize = 10
+addr = "search.sock"
+
+[credential]
+analytics-id = "153425181"
+filename = "credential.json"

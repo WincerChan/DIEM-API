@@ -3,11 +3,9 @@ package config
 import (
 	D "DIEM-API/models"
 	RPC "DIEM-API/rpcserver"
-	T "DIEM-API/tools"
 	L "DIEM-API/tools/logfactory"
-	"os"
+	C "DIEM-API/tools/tomlparser"
 
-	"github.com/spf13/viper"
 	gar "google.golang.org/api/analyticsreporting/v4"
 )
 
@@ -20,47 +18,37 @@ var (
 	AnalyticsReportingService *gar.Service
 )
 
-func checkConfig() string {
-	path := os.Getenv("CONFIG")
-	if path == "" {
-		println("Please set environment variable `CONFIG`")
-		os.Exit(1)
-	}
-	return path
-}
-
 // load config file(`config.yaml`) from disk.
 func loadConfig() {
-	viper.SetConfigName("config")
-	viper.AddConfigPath(checkConfig())
-	err = viper.ReadInConfig()
-	T.CheckFatalError(err, false)
-	id := viper.GetString("google.analytics_id")
-	D.InitGoogleAnalytics(id)
-	L.InitLog(T.ConfigAbsPath("_logs"))
+	id := C.GetString("credential.analytics-id")
+	credentialPath := C.ConfigAbsPath("credential.filename")
+	D.InitGoogleAnalytics(id, credentialPath)
+	L.InitLog(C.ConfigAbsPath("_logs"))
+	L.InitLog(C.ConfigAbsPath("log-path"))
 }
 
 func initDatabase() {
-	D.InitBoltConn(T.ConfigAbsPath(viper.GetString("bolt-path")))
+	D.InitBoltConn(C.ConfigAbsPath("bolt-path"))
 	D.BoltDB.Read(D.InitHitokoto)
 }
 
 // init rpc server Connection-Pool
 func initRPCServer() {
 	RalPool = RPC.NewPool(
-		viper.GetInt("rpc-server.poolsize"),
-		T.ConfigAbsPath(viper.GetString("rpc-server.addr")),
+		C.GetInt("rpc-server.poolsize"),
+		C.ConfigAbsPath("rpc-server.addr"),
 		RPC.DialTCP,
 	)
 	SearchPool = RPC.NewPool(
-		viper.GetInt("search.poolsize"),
-		T.ConfigAbsPath(viper.GetString("search.addr")),
+		C.GetInt("search.poolsize"),
+		C.ConfigAbsPath("search.addr"),
 		RPC.DialTCP,
 	)
 }
 
 // InitConfig init all config
 func InitConfig() {
+	C.LoadTOML()
 	loadConfig()
 	initDatabase()
 	initRPCServer()
