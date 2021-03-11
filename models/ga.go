@@ -13,9 +13,9 @@ var (
 	AnalyticsReportingService *gar.Service
 )
 
-func InitGACredential() {
+func InitGACredential(path string) {
 	ctx := context.Background()
-	json := T.LoadJSON(T.ConfigAbsPath("./credential.json"))
+	json := T.LoadJSON(path)
 	ars, err := gar.NewService(ctx, option.WithCredentialsJSON(json))
 	AnalyticsReportingService = ars
 	T.CheckFatalError(err, false)
