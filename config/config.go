@@ -5,6 +5,8 @@ import (
 	RPC "DIEM-API/rpcserver"
 	L "DIEM-API/tools/logfactory"
 	C "DIEM-API/tools/tomlparser"
+	T "DIEM-API/tools"
+	"os"
 
 	gar "google.golang.org/api/analyticsreporting/v4"
 )
@@ -28,15 +30,20 @@ func loadConfig() {
 }
 
 func initDatabase() {
-	D.InitBoltConn(C.ConfigAbsPath("bolt-path"))
+	path := C.ConfigAbsPath("hitokoto.dbpath")
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		println("Check bolt file dont't found, try to migrate database")
+		T.OpenFile(C.ConfigAbsPath("hitokoto.source"), path)
+	}
+	D.InitBoltConn(path)
 	D.BoltDB.Read(D.InitHitokoto)
 }
 
 // init rpc server Connection-Pool
 func initRPCServer() {
 	RalPool = RPC.NewPool(
-		C.GetInt("rpc-server.poolsize"),
-		C.ConfigAbsPath("rpc-server.addr"),
+		C.GetInt("rate-limit.poolsize"),
+		C.ConfigAbsPath("rate-limit.addr"),
 		RPC.DialTCP,
 	)
 	SearchPool = RPC.NewPool(

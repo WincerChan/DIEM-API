@@ -38,6 +38,11 @@ func GetInt(key string) int {
 	return T.Int(value)
 }
 
+func GetBool(key string) bool {
+	value := Config.Get(key)
+	return value.(bool)
+}
+
 func ConfigAbsPath(key string) string {
 	base := GetString("config_dir")
 	return filepath.Join(base, GetString(key))
