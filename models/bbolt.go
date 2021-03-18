@@ -19,7 +19,6 @@ func (bc *BoltConn) Write(fn func(tx *bolt.Tx) error) {
 }
 
 func InitBoltConn(path string) {
-	// T.OpenFile(path)
 	db, err := bolt.Open(path, 0666, &bolt.Options{ReadOnly: true})
 	T.CheckFatalError(err, false)
 	BoltDB = &BoltConn{*db}
