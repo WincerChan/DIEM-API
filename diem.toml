@@ -1,6 +1,5 @@
 config_dir = "/Users/loerfy/opts"
 
-bolt-path = "bbolt"
 log-path = "_logs"
 
 [hitokoto]
