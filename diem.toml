@@ -3,9 +3,14 @@ config_dir = "/Users/loerfy/opts"
 bolt-path = "bbolt"
 log-path = "_logs"
 
-[rpc-server]
+[hitokoto]
+dbpath = "bbolt"
+source = "hito"
+
+[rate-limit]
 poolsize = 5
 addr = "ral.sock"
+enable = true
 
 [search]
 poolsize = 10
