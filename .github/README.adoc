@@ -11,23 +11,28 @@ image:https://img.shields.io/github/languages/code-size/WincerChan/Hitokoto.svg?
 . 一言（Hitokoto）
 . 网易云音乐（Cloudmusic）
 . Google 分析（Google Analytics）（这条并没有什么卵用
+. 博客搜索的 API（仅作流量转发和字段验证）
 
 有关这些 API 的具体信息请移步至 https://api.itswincer.com[API 的文档]（文档包含展示及测试模块，GitHub 无法展示）。
 
 == 部署
 
-[quote]
-数据库相关的存储过程及操作见 `_sql` 文件夹。
+依赖如下：
+
+. Elixir (限流模块使用，二者使用 Unix Domain Socket 通信，可以通过配置文件 rpc-server 的 enable 字段禁用掉)
+. Rust（博客的搜索 API，基于 Tantivy）
+
+部署前需要使用
 
 === 普通部署
 
-clone 本仓库并在 `config.yaml` 填入 PostgreSQL 的用户名、密码，Redis 的地址、密码等（格式参考 config_sample.yaml），*Redis 需载入 https://github.com/brandur/redis-cell[redis-cell] 模块*。
+clone 本仓库并在 `diem.toml` 修改相关的信息。
 
 [source,sh]
 ----
 go build -o server # <1>
-./server # <2>
-env GIN_MODE=release ./server # <3>
+env CONFIG=./ ./server # <2>
+env GIN_MODE=release CONFIG=./ ./server # <3>
 ----
 <1> 编译成二进制
 <2> 开发环境
@@ -36,15 +41,8 @@ env GIN_MODE=release ./server # <3>
 其中生产环境不会在终端打印日志，而是会把日志都记录在 _log 文件夹内。
 
 === 容器版部署（推荐）
-clone 本仓库，并在 `config.yaml` 填入 PostgreSQL 的用户名、密码，Redis 的地址、密码等（格式参考 config_sample.yaml）。
 
-. docker build --tag loerfy/apis:latest .
-. kubectl apply -f redis-deploy.yaml
-. kubectl apply -f postgres-pvc.yaml
-. kubectl apply -f postgres-deploy.yaml
-. kubectl apply -f diem-deploy.yaml
-
-WARNING: 其中 postgres-pvc.yaml 的数据库持久化路径需要自己配置一下。
+由于引入了 Unix Domain Socket，所以已经不再适合 K8s 部署了，仍有这方面需求的可以切换到 HTTP Branch，但我不会再更新相关的配置了。
 
 == 致谢
 
