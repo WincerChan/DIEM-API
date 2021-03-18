@@ -3,9 +3,9 @@ package config
 import (
 	D "DIEM-API/models"
 	RPC "DIEM-API/rpcserver"
+	T "DIEM-API/tools"
 	L "DIEM-API/tools/logfactory"
 	C "DIEM-API/tools/tomlparser"
-	T "DIEM-API/tools"
 	"os"
 
 	gar "google.golang.org/api/analyticsreporting/v4"
@@ -31,10 +31,6 @@ func loadConfig() {
 
 func initDatabase() {
 	path := C.ConfigAbsPath("hitokoto.dbpath")
-	if _, err := os.Stat(path); os.IsNotExist(err) {
-		println("Check bolt file dont't found, try to migrate database")
-		T.OpenFile(C.ConfigAbsPath("hitokoto.source"), path)
-	}
 	D.InitBoltConn(path)
 	D.BoltDB.Read(D.InitHitokoto)
 }
@@ -59,4 +55,13 @@ func InitConfig() {
 	loadConfig()
 	initDatabase()
 	initRPCServer()
+}
+
+func MigrateBolt() {
+	C.LoadTOML()
+	path := C.ConfigAbsPath("hitokoto.dbpath")
+	os.Remove(path)
+	println("Trying to migrate database")
+	T.MigrateHitokoto(C.ConfigAbsPath("hitokoto.source"), path)
+	println("succeed.")
 }
