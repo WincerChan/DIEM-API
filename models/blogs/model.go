@@ -22,11 +22,13 @@ func (p *Params) BindPage(str string) string {
 	pages := strings.Split(str, "-")
 	if len(pages) != 2 {
 		return "invalid pages format, expected likes: 1-10"
+	} else if len(pages[1]) > 1 {
+		return "invalid pages format, page cannot greate than 10"
 	}
 	for _, p := range pages {
 		n, err := strconv.Atoi(p)
 		if n <= 0 {
-			return "invalid pages format, page and size must be positive."
+			return "invalid pages format, page and size must be positive integer."
 		}
 		if err != nil {
 			return err.Error()

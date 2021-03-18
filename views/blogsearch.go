@@ -70,7 +70,6 @@ func execute(ctx *gin.Context) []byte {
 func BlogSearchViews(ctx *gin.Context) {
 	ret := execute(ctx)
 	// log.Println(ret)
-	ctx.Header("Access-Control-Allow-Origin", "*")
 	ctx.Header("Content-Type", "application/json")
 	ctx.Writer.Write(ret)
 }
