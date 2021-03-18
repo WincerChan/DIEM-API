@@ -19,7 +19,7 @@ image:https://img.shields.io/github/languages/code-size/WincerChan/Hitokoto.svg?
 
 依赖如下：
 
-. Elixir (限流模块使用，二者使用 Unix Domain Socket 通信，可以通过配置文件 rpc-server 的 enable 字段禁用掉)
+. Elixir (限流模块使用，二者使用 Unix Domain Socket 通信，可以通过配置文件 rate-limit 的 enable 字段禁用掉)
 . Rust（博客的搜索 API，基于 Tantivy）
 
 部署前需要使用
