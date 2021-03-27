@@ -10,6 +10,7 @@ import (
 )
 
 const INDEXUID = "blogs"
+const MAXKEYWORDLENGTH = 37
 
 type Params struct {
 	Paginate  string `form:"pages" json:"pages" deserialize:"BindPage"`
@@ -42,6 +43,7 @@ func (p *Params) BindRange(str string) string {
 	ranges := strings.Split(str, "~")
 	times := []string{strconv.Itoa(0), strconv.Itoa(int(time.Now().Unix()))}
 	if str == "" {
+		return ""
 	} else if len(ranges) != 2 {
 		return "invalid range format, expected likes: 2020-02-12~2021-03-24"
 	}
@@ -76,7 +78,8 @@ func (p *Params) BindTerms(str string) string {
 }
 
 func (p *Params) BindQ(str string) string {
-	p.Query = str
+	formatStr := strings.ReplaceAll(str, "\n", "")
+	p.Query = string([]rune(formatStr)[:MAXKEYWORDLENGTH])
 	return ""
 }
 
