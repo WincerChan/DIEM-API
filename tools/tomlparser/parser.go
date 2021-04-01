@@ -45,5 +45,9 @@ func GetBool(key string) bool {
 
 func ConfigAbsPath(key string) string {
 	base := GetString("config_dir")
-	return filepath.Join(base, GetString(key))
+	file := GetString(key)
+	if filepath.IsAbs(file) {
+		return file
+	}
+	return filepath.Join(base, file)
 }

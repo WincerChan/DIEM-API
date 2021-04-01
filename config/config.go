@@ -7,6 +7,7 @@ import (
 	L "DIEM-API/tools/logfactory"
 	C "DIEM-API/tools/tomlparser"
 	"os"
+	"strings"
 
 	gar "google.golang.org/api/analyticsreporting/v4"
 )
@@ -18,15 +19,19 @@ var (
 	err        error
 	// AnalyticsReportingService is same as before
 	AnalyticsReportingService *gar.Service
+	RegisterService           []string
 )
+
+func initLogService() {
+	L.InitLog(C.ConfigAbsPath("_logs"))
+	L.InitLog(C.ConfigAbsPath("log-path"))
+}
 
 // load config file(`config.yaml`) from disk.
 func loadConfig() {
 	id := C.GetString("credential.analytics-id")
 	credentialPath := C.ConfigAbsPath("credential.filename")
 	D.InitGoogleAnalytics(id, credentialPath)
-	L.InitLog(C.ConfigAbsPath("_logs"))
-	L.InitLog(C.ConfigAbsPath("log-path"))
 }
 
 func initDatabase() {
@@ -42,6 +47,9 @@ func initRPCServer() {
 		C.ConfigAbsPath("rate-limit.addr"),
 		RPC.DialTCP,
 	)
+}
+
+func initSearchAPI() {
 	SearchPool = RPC.NewPool(
 		C.GetInt("search.poolsize"),
 		C.ConfigAbsPath("search.addr"),
@@ -50,11 +58,19 @@ func initRPCServer() {
 }
 
 // InitConfig init all config
-func InitConfig() {
+func InitConfig(service string) {
 	C.LoadTOML()
-	loadConfig()
-	initDatabase()
 	initRPCServer()
+	initLogService()
+	if strings.HasPrefix("hitokoto", service) {
+		initDatabase()
+	}
+	if strings.HasPrefix("analytics", service) {
+		loadConfig()
+	}
+	if strings.HasPrefix("search", service) {
+		initSearchAPI()
+	}
 }
 
 func MigrateBolt() {
