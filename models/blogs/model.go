@@ -79,7 +79,12 @@ func (p *Params) BindTerms(str string) string {
 
 func (p *Params) BindQ(str string) string {
 	formatStr := strings.ReplaceAll(str, "\n", "")
-	p.Query = string([]rune(formatStr)[:MAXKEYWORDLENGTH])
+	q := []rune(formatStr)
+	if len(q) >= MAXKEYWORDLENGTH {
+		p.Query = string(q[:MAXKEYWORDLENGTH])
+	} else {
+		p.Query = formatStr
+	}
 	return ""
 }
 
