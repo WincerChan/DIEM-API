@@ -9,7 +9,8 @@ import (
 )
 
 // log error message
-func storeError() {
+func storeError(e error) {
+	Logf.Error.Error().Msg(e.Error())
 	Logf.Error.Error().Msg(string(debug.Stack()))
 }
 
@@ -20,10 +21,8 @@ func Recover(c *gin.Context) {
 		if r == nil {
 			return
 		}
-
-		storeError()
-
 		e := r.(error)
+		storeError(e)
 		c.Error(errors.New(e.Error()))
 
 	}()

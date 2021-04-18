@@ -34,6 +34,8 @@ func Str(arg interface{}) (ret string) {
 		ret = fmt.Sprintf("%.1f", arg.(float64))
 	case uint32:
 		ret = strconv.Itoa(int(arg.(uint32)))
+	case uint64:
+		ret = strconv.Itoa(int(arg.(uint64)))
 	case string:
 		ret = arg.(string)
 	}

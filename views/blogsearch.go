@@ -3,6 +3,7 @@ package views
 import (
 	C "DIEM-API/config"
 	B "DIEM-API/models/blogs"
+	I "DIEM-API/rpcserver"
 	T "DIEM-API/tools"
 	"fmt"
 	"time"
@@ -60,16 +61,12 @@ func execute(ctx *gin.Context) []byte {
 	// v, err := json.Marshal(p)
 	// log.Println(string(v))
 	T.CheckException(err, "decode json error")
-	c := C.SearchPool.Get()
-	c.WriteLine([]byte(p.Serialize()))
-	// log.Println("write")
-	defer C.SearchPool.Put(c)
-	return c.ReadLine()
+	ret := I.Search(p.Paginate, p.DateRange, p.Terms, p.Query, C.SearchPool)
+	return []byte(T.Str(ret[0]))
 }
 
 func BlogSearchViews(ctx *gin.Context) {
 	ret := execute(ctx)
-	// log.Println(ret)
 	ctx.Header("Content-Type", "application/json")
 	ctx.Writer.Write(ret)
 }

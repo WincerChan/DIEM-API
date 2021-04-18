@@ -23,8 +23,7 @@ var (
 )
 
 func initLogService() {
-	L.InitLog(C.ConfigAbsPath("_logs"))
-	L.InitLog(C.ConfigAbsPath("log-path"))
+	L.InitLog()
 }
 
 // load config file(`config.yaml`) from disk.

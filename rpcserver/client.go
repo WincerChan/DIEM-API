@@ -14,11 +14,14 @@ import (
 )
 
 const (
-	DELIMITER = 18
-	STRING    = 0
-	ATOM      = 1
-	INTEGER   = 2
-	FLOAT     = 3
+	Delimiter = 18
+	String    = 0
+	Atom      = 1
+	Integer   = 2
+	Float     = 3
+
+	BasicType    = 0
+	CompoundType = 1
 )
 
 var once sync.Once
@@ -38,45 +41,79 @@ type RPCConn struct {
 	reader *bufio.Reader
 }
 
-func (r *RPCEncode) setLength(value uint32) {
-	data := make([]byte, 4)
-	binary.BigEndian.PutUint32(data, value)
+func (r *RPCEncode) putInteger(value, len int) {
+	data := make([]byte, len)
+	if 4 == len {
+		binary.BigEndian.PutUint32(data, uint32(value))
+	} else {
+		binary.BigEndian.PutUint64(data, uint64(value))
+	}
 	r.buffer.Write(data)
 }
+
 func (r *RPCEncode) getLength(value uint32) []byte {
 	data := make([]byte, 4)
 	binary.BigEndian.PutUint32(data, value)
 	return data
 }
 
+func (r *RPCEncode) encodeStringList(values []string) {
+	r.buffer.WriteByte(Delimiter)
+	r.buffer.WriteByte(CompoundType)
+	r.buffer.WriteByte(String)
+	sub := new(RPCEncode)
+	for _, value := range values {
+		sub.encodeString(value)
+	}
+	subBytes := sub.buffer.Bytes()
+	r.putInteger(len(subBytes), 4)
+	r.buffer.Write(subBytes)
+}
+
+func (r *RPCEncode) encodeIntegerList(values []int) {
+	r.buffer.WriteByte(Delimiter)
+	r.buffer.WriteByte(CompoundType)
+	r.buffer.WriteByte(Integer)
+	sub := new(RPCEncode)
+	for _, value := range values {
+		sub.encodeInteger(value)
+	}
+	subBytes := sub.buffer.Bytes()
+	r.putInteger(len(subBytes), 4)
+	r.buffer.Write(subBytes)
+}
 func (r *RPCEncode) encodeString(value string) {
-	r.buffer.WriteByte(DELIMITER)
-	r.setLength(uint32(len(value)))
-	r.buffer.WriteByte(STRING)
+	r.buffer.WriteByte(Delimiter)
+	r.buffer.WriteByte(BasicType)
+	r.buffer.WriteByte(String)
+	r.putInteger(len(value), 4)
 	r.buffer.Write([]byte(value))
 }
 
 func (r *RPCEncode) encodeAtom(value string) {
-	r.buffer.WriteByte(DELIMITER)
-	r.setLength(uint32(len(value)))
-	r.buffer.WriteByte(ATOM)
+	r.buffer.WriteByte(Delimiter)
+	r.buffer.WriteByte(BasicType)
+	r.buffer.WriteByte(Atom)
+	r.putInteger(len(value), 4)
 	r.buffer.Write([]byte(value))
 }
 
-func (r *RPCEncode) encodeInteger(value uint32) {
-	r.buffer.WriteByte(DELIMITER)
-	r.setLength(4)
-	r.buffer.WriteByte(INTEGER)
-	r.setLength(value)
+func (r *RPCEncode) encodeInteger(value int) {
+	r.buffer.WriteByte(Delimiter)
+	r.buffer.WriteByte(BasicType)
+	r.buffer.WriteByte(Integer)
+	r.putInteger(8, 4)
+	r.putInteger(value, 8)
 }
 
 func (r *RPCEncode) encodeFloat(value float64) {
-	r.buffer.WriteByte(DELIMITER)
+	r.buffer.WriteByte(Delimiter)
+	r.buffer.WriteByte(BasicType)
+	r.buffer.WriteByte(Float)
 	bits := math.Float64bits(value)
 	data := make([]byte, 8)
 	binary.BigEndian.PutUint64(data, bits)
-	r.setLength(8)
-	r.buffer.WriteByte(FLOAT)
+	r.putInteger(8, 4)
 	r.buffer.Write(data)
 }
 
