@@ -13,77 +13,72 @@ const INDEXUID = "blogs"
 const MAXKEYWORDLENGTH = 37
 
 type Params struct {
-	Paginate  string `form:"pages" json:"pages" deserialize:"BindPage"`
-	Terms     string `form:"terms" json:"terms" deserialize:"BindTerms"`
-	Query     string `form:"q" json:"q" deserialize:"BindQ"`
-	DateRange string `form:"range" json:"range" deserialize:"BindRange"`
+	Paginate  []int    `form:"pages" json:"pages" deserialize:"BindPage"`
+	Terms     []string `form:"terms" json:"terms" deserialize:"BindTerms"`
+	Query     []string `form:"q" json:"q" deserialize:"BindQ"`
+	DateRange []int    `form:"range" json:"range" deserialize:"BindRange"`
 }
 
 func (p *Params) BindPage(str string) string {
 	pages := strings.Split(str, "-")
+	p.Paginate = make([]int, 2)
 	if len(pages) != 2 {
 		return "invalid pages format, expected likes: 1-10"
 	} else if len(pages[1]) > 1 {
 		return "invalid pages format, page cannot greate than 10"
 	}
-	for _, p := range pages {
-		n, err := strconv.Atoi(p)
-		if n <= 0 {
-			return "invalid pages format, page and size must be positive integer."
-		}
+	for i, pag := range pages {
+		n, err := strconv.ParseUint(pag, 10, 32)
 		if err != nil {
 			return err.Error()
 		}
+		p.Paginate[i] = int(n)
 	}
-	p.Paginate = str
 	return ""
 }
 
 func (p *Params) BindRange(str string) string {
 	ranges := strings.Split(str, "~")
-	times := []string{strconv.Itoa(0), strconv.Itoa(int(time.Now().Unix()))}
-	if str == "" {
+	if len(ranges) == 1 {
 		return ""
-	} else if len(ranges) != 2 {
-		return "invalid range format, expected likes: 2020-02-12~2021-03-24"
 	}
+	p.DateRange = []int{0, int(time.Now().Unix())}
 	for i, r := range ranges {
 		if r != "" {
 			t, err := time.Parse("2006-01-02", r)
 			if err != nil {
 				return err.Error()
 			}
-			times[i] = strconv.Itoa(int(t.Unix()))
+			p.DateRange[i] = int(t.Unix())
 		}
 	}
-	p.DateRange = strings.Join(times, "~")
 	return ""
 }
 
 func (p *Params) BindTerms(str string) string {
-	if str == "" {
-		return ""
-	}
 	terms := strings.Split(str, " ")
-	if len(terms) > 5 {
-		return "max allowed terms is 5"
+	p.Terms = make([]string, 0, 4)
+	truncated := make([]string, 0, 4)
+	if len(terms) > 4 {
+		truncated = terms[:4]
+	} else if len(terms) != 1 {
+		truncated = terms
 	}
-	for _, term := range terms {
+	for _, term := range truncated {
 		if !strings.HasPrefix(term, "tags:") && !strings.HasPrefix(term, "category:") {
 			return "invalid terms, expects category or tags"
 		}
+		p.Terms = append(p.Terms, term)
 	}
-	p.Terms = str
 	return ""
 }
 
 func (p *Params) BindQ(str string) string {
-	formatStr := strings.ReplaceAll(str, "\n", "")
-	q := []rune(formatStr)
+	q := []rune(str)
 	if len(q) >= MAXKEYWORDLENGTH {
-		p.Query = string(q[:MAXKEYWORDLENGTH])
+		p.Query = strings.Split(string(q[:MAXKEYWORDLENGTH]), ",")
 	} else {
-		p.Query = formatStr
+		p.Query = strings.Split(str, ",")
 	}
 	return ""
 }
