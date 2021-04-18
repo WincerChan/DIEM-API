@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 )
 
@@ -20,26 +19,12 @@ var Access = access{}
 var Error = error{}
 var StdErr = stdErr{}
 
-func InitLog(path string) {
-	ginMode := gin.Mode()
+func InitLog() {
 
 	zlogStderr := zerolog.ConsoleWriter{Out: os.Stderr}
 
-	if ginMode == "debug" {
-		zlogE = zerolog.New(zlogStderr).With().Timestamp().Logger()
-		zlogA = zerolog.New(zlogStderr).With().Timestamp().Logger()
-		return
-	}
-
-	zlogError := newFactory("error", path)
-	zlogAccess := newFactory("access", path)
-
-	go zlogError.rotate()
-	go zlogAccess.rotate()
-
-	zlogE = zerolog.New(zlogError.Writer).With().Timestamp().Logger()
-	zlogA = zerolog.New(zlogAccess.Writer).With().Timestamp().Logger()
-
+	zlogE = zerolog.New(zlogStderr).With().Timestamp().Logger()
+	// zlogA = zerolog.New(zlogStderr).With().Timestamp().Logger() // comment is to disable access log
 }
 
 func newFactory(level, logPath string) *factory {
