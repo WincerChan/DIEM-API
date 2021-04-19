@@ -24,6 +24,7 @@ func Recover(c *gin.Context) {
 		e := r.(error)
 		storeError(e)
 		c.Error(errors.New(e.Error()))
+		c.String(500, "Sorry, server occurs a problem.")
 
 	}()
 	c.Next()
