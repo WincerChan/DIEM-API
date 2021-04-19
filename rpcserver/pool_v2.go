@@ -128,8 +128,8 @@ func (p *Pool) Put(c *Conn) {
 	closed := c.closed
 	p.mutex.Unlock()
 	if closed {
-		log.Println("err closed")
-		return
+		log.Println("error: closed connection")
+		c = p.newConn()
 	}
 	p.pushIdle(c)
 }
