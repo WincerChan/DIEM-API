@@ -12,7 +12,7 @@ import (
 )
 
 type Options struct {
-	Dial     func(string) (*net.UnixConn, error)
+	Dial     func(string) (*CompoundConn, error)
 	PoolSize int
 	Addr     string
 }
@@ -28,13 +28,13 @@ type Pool struct {
 }
 
 type Conn struct {
-	netConn *net.UnixConn
+	netConn *CompoundConn
 	reader  *bufio.Reader
 	writer  *bufio.Writer
 	closed  bool
 }
 
-func NewPool(poolSize int, Addr string, dial func(string) (*net.UnixConn, error)) *Pool {
+func NewPool(poolSize int, Addr string, dial func(string) (*CompoundConn, error)) *Pool {
 	p := &Pool{
 		ops: &Options{
 			Dial:     dial,
@@ -48,7 +48,7 @@ func NewPool(poolSize int, Addr string, dial func(string) (*net.UnixConn, error)
 	return p
 }
 
-func DialTCP(addr string) (*net.UnixConn, error) {
+func DialUDS(addr string) (*CompoundConn, error) {
 	sockFile, err := net.ResolveUnixAddr("unix", addr)
 	if err != nil {
 		T.CheckException(err, "resolve unix addr failed.")
@@ -57,7 +57,19 @@ func DialTCP(addr string) (*net.UnixConn, error) {
 	if err != nil {
 		T.CheckException(err, "dial unix addr failed.")
 	}
-	return conn, nil
+	return &CompoundConn{UDSConn: conn}, nil
+}
+
+func DialTCP(addr string) (*CompoundConn, error) {
+	sockConn, err := net.ResolveTCPAddr("tcp", addr)
+	if err != nil {
+		T.CheckException(err, "resolve tcp addr failed.")
+	}
+	conn, err := net.DialTCP("tcp", nil, sockConn)
+	if err != nil {
+		T.CheckException(err, "dial tcp addr failed.")
+	}
+	return &CompoundConn{TcpConn: conn}, nil
 }
 
 func (c *Conn) WriteLine(line []byte) {
@@ -172,8 +184,8 @@ func (p *Pool) newConn() *Conn {
 	}
 	conn := &Conn{
 		netConn: netConn,
-		reader:  bufio.NewReader(netConn),
-		writer:  bufio.NewWriter(netConn),
+		reader:  netConn.Reader(),
+		writer:  netConn.Writer(),
 	}
 	return conn
 }
