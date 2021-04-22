@@ -41,17 +41,29 @@ func initDatabase() {
 
 // init rpc server Connection-Pool
 func initRPCServer() {
+	var addr string
+	if C.GetString("rate-limit.network") == "uds" {
+		addr = C.ConfigAbsPath("rate-limit.addr")
+	} else {
+		addr = C.GetString("rate-limit.addr")
+	}
 	RalPool = RPC.NewPool(
 		C.GetInt("rate-limit.poolsize"),
-		C.ConfigAbsPath("rate-limit.addr"),
-		RPC.DialTCP,
+		addr,
+		RPC.DialUDS,
 	)
 }
 
 func initSearchAPI() {
+	var addr string
+	if C.GetString("search.network") == "uds" {
+		addr = C.ConfigAbsPath("search.addr")
+	} else {
+		addr = C.GetString("search.addr")
+	}
 	SearchPool = RPC.NewPool(
 		C.GetInt("search.poolsize"),
-		C.ConfigAbsPath("search.addr"),
+		addr,
 		RPC.DialTCP,
 	)
 }
