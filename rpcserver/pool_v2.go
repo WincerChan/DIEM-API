@@ -92,6 +92,7 @@ func (c *Conn) ReadLine() []byte {
 }
 
 func (c *Conn) WriteOnce(line []byte) {
+	c.writer.Write(integerToBytes(len(line), 4))
 	_, err := c.writer.Write(line)
 	if err != nil {
 		c.closed = true
@@ -101,19 +102,19 @@ func (c *Conn) WriteOnce(line []byte) {
 }
 
 func (c *Conn) ReadOnce() []byte {
-	prefix, err := c.reader.Peek(4)
+	prefix, err := c.reader.Peek(SizeBytes)
 	if err != nil {
 		c.closed = true
 		log.Println(err)
 		return nil
 	}
 	size := binary.BigEndian.Uint32(prefix)
-	data := make([]byte, size+4)
+	data := make([]byte, size+SizeBytes)
 	_, err = io.ReadFull(c.reader, data)
 	if err != nil {
 		log.Println(err)
 	}
-	return data[4:]
+	return data[SizeBytes:]
 }
 
 func (p *Pool) Get() *Conn {
