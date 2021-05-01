@@ -93,19 +93,5 @@ func encodeFloat(bf *bytes.Buffer, value float64) {
 func execute(bf *bytes.Buffer, conn *Conn) []interface{} {
 	conn.WriteOnce(bf.Bytes())
 	body := conn.ReadOnce()
-	d := &RPCDecode{data: body}
-	return d.extract()
+	return extract(&body)
 }
-
-// func main() {
-// 	times, _ := strconv.Atoi(os.Args[1])
-// 	p := NewPool(10, "127.0.0.1:4004", DialTCP)
-// 	wg.Add(times)
-// 	start := time.Now()
-// 	for i := 0; i < times; i++ {
-// 		k := strconv.Itoa(i % 3000)
-// 		go Choke(k, 8, 0.1, p)
-// 	}
-// 	wg.Wait()
-// 	log.Println(time.Since(start))
-// }
