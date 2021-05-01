@@ -3,7 +3,11 @@ package rpcserver
 import (
 	"bytes"
 	"encoding/binary"
+	"log"
 	"math"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type RPCDecode struct {
@@ -69,4 +73,14 @@ outside:
 		}
 	}
 	return results
+}
+
+func main() {
+	st := time.Now()
+	for i := 0; i < 10000000; i++ {
+		a := strings.Split("choke$$0.1$10", "$")
+		strconv.Atoi(a[3])
+		strconv.ParseFloat(a[2], 64)
+	}
+	log.Println(time.Since(st))
 }

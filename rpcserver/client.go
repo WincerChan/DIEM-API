@@ -4,21 +4,16 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/binary"
-	"log"
 	"math"
 	"net"
-	"os"
-	"strconv"
 	"sync"
-	"time"
 )
 
 const (
-	Delimiter = 18
-	String    = 0
-	Atom      = 1
-	Integer   = 2
-	Float     = 3
+	String  = 0
+	Atom    = 1
+	Integer = 2
+	Float   = 3
 
 	BasicType    = 0
 	CompoundType = 1
@@ -29,10 +24,6 @@ var once sync.Once
 var rpcConn *RPCConn
 var wg sync.WaitGroup
 
-type RPCEncode struct {
-	buffer bytes.Buffer
-}
-
 type RPCConn struct {
 	conn   net.Conn
 	signal chan error
@@ -41,102 +32,80 @@ type RPCConn struct {
 	reader *bufio.Reader
 }
 
-func (r *RPCEncode) putInteger(value, len int) {
-	data := make([]byte, len)
-	if 4 == len {
-		binary.BigEndian.PutUint32(data, uint32(value))
-	} else {
-		binary.BigEndian.PutUint64(data, uint64(value))
+func encodeStringList(bf *bytes.Buffer, values []string) {
+	bf.WriteByte(16)
+	subBf := new(bytes.Buffer)
+	for _, value := range values {
+		encodeString(subBf, value)
 	}
-	r.buffer.Write(data)
+	subBytes := subBf.Bytes()
+	bf.Write(integerToBytes(len(subBytes), 4))
+	bf.Write(subBytes)
 }
 
-func (r *RPCEncode) getLength(value uint32) []byte {
-	data := make([]byte, 4)
-	binary.BigEndian.PutUint32(data, value)
+func encodeIntegerList(bf *bytes.Buffer, values []int) {
+	bf.WriteByte(16)
+	subBf := new(bytes.Buffer)
+	for _, value := range values {
+		encodeInteger(subBf, value)
+	}
+	subBytes := subBf.Bytes()
+	bf.Write(integerToBytes(len(subBytes), 4))
+	bf.Write(subBytes)
+}
+
+func encodeString(bf *bytes.Buffer, value string) {
+	bf.WriteByte(String)
+	bf.Write(integerToBytes(len(value), 4))
+	bf.Write([]byte(value))
+}
+
+func integerToBytes(integer, bytes int) []byte {
+	data := make([]byte, bytes, bytes)
+	switch bytes {
+	case 4:
+		binary.BigEndian.PutUint32(data, uint32(integer))
+	case 8:
+		binary.BigEndian.PutUint64(data, uint64(integer))
+	}
 	return data
 }
 
-func (r *RPCEncode) encodeStringList(values []string) {
-	r.buffer.WriteByte(Delimiter)
-	r.buffer.WriteByte(CompoundType)
-	r.buffer.WriteByte(String)
-	sub := new(RPCEncode)
-	for _, value := range values {
-		sub.encodeString(value)
-	}
-	subBytes := sub.buffer.Bytes()
-	r.putInteger(len(subBytes), 4)
-	r.buffer.Write(subBytes)
+func encodeAtom(bf *bytes.Buffer, value string) {
+	bf.WriteByte(Atom)
+	bf.Write(integerToBytes(len(value), 4))
+	bf.Write([]byte(value))
 }
 
-func (r *RPCEncode) encodeIntegerList(values []int) {
-	r.buffer.WriteByte(Delimiter)
-	r.buffer.WriteByte(CompoundType)
-	r.buffer.WriteByte(Integer)
-	sub := new(RPCEncode)
-	for _, value := range values {
-		sub.encodeInteger(value)
-	}
-	subBytes := sub.buffer.Bytes()
-	r.putInteger(len(subBytes), 4)
-	r.buffer.Write(subBytes)
-}
-func (r *RPCEncode) encodeString(value string) {
-	r.buffer.WriteByte(Delimiter)
-	r.buffer.WriteByte(BasicType)
-	r.buffer.WriteByte(String)
-	r.putInteger(len(value), 4)
-	r.buffer.Write([]byte(value))
+func encodeInteger(bf *bytes.Buffer, value int) {
+	bf.WriteByte(Integer)
+	bf.Write(integerToBytes(8, 4))
+	bf.Write(integerToBytes(value, 8))
 }
 
-func (r *RPCEncode) encodeAtom(value string) {
-	r.buffer.WriteByte(Delimiter)
-	r.buffer.WriteByte(BasicType)
-	r.buffer.WriteByte(Atom)
-	r.putInteger(len(value), 4)
-	r.buffer.Write([]byte(value))
-}
-
-func (r *RPCEncode) encodeInteger(value int) {
-	r.buffer.WriteByte(Delimiter)
-	r.buffer.WriteByte(BasicType)
-	r.buffer.WriteByte(Integer)
-	r.putInteger(8, 4)
-	r.putInteger(value, 8)
-}
-
-func (r *RPCEncode) encodeFloat(value float64) {
-	r.buffer.WriteByte(Delimiter)
-	r.buffer.WriteByte(BasicType)
-	r.buffer.WriteByte(Float)
+func encodeFloat(bf *bytes.Buffer, value float64) {
+	bf.WriteByte(Float)
 	bits := math.Float64bits(value)
-	data := make([]byte, 8)
-	binary.BigEndian.PutUint64(data, bits)
-	r.putInteger(8, 4)
-	r.buffer.Write(data)
+	bf.Write(integerToBytes(8, 4))
+	bf.Write(integerToBytes(int(bits), 8))
 }
 
-func (r *RPCEncode) execute(conn *Conn) []interface{} {
-	r.buffer.Write([]byte("\r\n"))
-	line := r.buffer.Bytes()
-	size := r.getLength(uint32(len(line)))
-	line = append(size, line...)
-	conn.WriteOnce(line)
+func execute(bf *bytes.Buffer, conn *Conn) []interface{} {
+	conn.WriteOnce(bf.Bytes())
 	body := conn.ReadOnce()
 	d := &RPCDecode{data: body}
 	return d.extract()
 }
 
-func main() {
-	times, _ := strconv.Atoi(os.Args[1])
-	p := NewPool(10, "127.0.0.1:4004", DialTCP)
-	wg.Add(times)
-	start := time.Now()
-	for i := 0; i < times; i++ {
-		k := strconv.Itoa(i % 3000)
-		go Choke(k, 8, 0.1, p)
-	}
-	wg.Wait()
-	log.Println(time.Since(start))
-}
+// func main() {
+// 	times, _ := strconv.Atoi(os.Args[1])
+// 	p := NewPool(10, "127.0.0.1:4004", DialTCP)
+// 	wg.Add(times)
+// 	start := time.Now()
+// 	for i := 0; i < times; i++ {
+// 		k := strconv.Itoa(i % 3000)
+// 		go Choke(k, 8, 0.1, p)
+// 	}
+// 	wg.Wait()
+// 	log.Println(time.Since(start))
+// }

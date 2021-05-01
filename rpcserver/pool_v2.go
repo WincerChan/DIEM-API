@@ -92,6 +92,7 @@ func (c *Conn) ReadLine() []byte {
 }
 
 func (c *Conn) WriteOnce(line []byte) {
+	c.writer.Write(integerToBytes(len(line), 4))
 	_, err := c.writer.Write(line)
 	if err != nil {
 		c.closed = true

@@ -1,23 +1,25 @@
 package rpcserver
 
+import "bytes"
+
 func Choke(key string, total int, speed float64, p *Pool) []interface{} {
-	rpc := new(RPCEncode)
-	rpc.encodeAtom("choke")
-	rpc.encodeString(key)
-	rpc.encodeInteger(total)
-	rpc.encodeFloat(speed)
+	bf := new(bytes.Buffer)
+	encodeAtom(bf, "choke")
+	encodeString(bf, key)
+	encodeInteger(bf, total)
+	encodeFloat(bf, speed)
 	conn := p.Get()
 	defer p.Put(conn)
-	return rpc.execute(conn)
+	return execute(bf, conn)
 }
 
 func Search(pages, ranges []int, terms, q []string, p *Pool) []interface{} {
-	rpc := new(RPCEncode)
-	rpc.encodeIntegerList(pages)
-	rpc.encodeIntegerList(ranges)
-	rpc.encodeStringList(terms)
-	rpc.encodeStringList(q)
+	bf := new(bytes.Buffer)
+	encodeIntegerList(bf, pages)
+	encodeIntegerList(bf, ranges)
+	encodeStringList(bf, terms)
+	encodeStringList(bf, q)
 	conn := p.Get()
 	defer p.Put(conn)
-	return rpc.execute(conn)
+	return execute(bf, conn)
 }
