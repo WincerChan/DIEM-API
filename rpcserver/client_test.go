@@ -1,30 +1,31 @@
 package rpcserver
 
 import (
+	"bytes"
 	"fmt"
-	"log"
-	"os"
 	"strconv"
-	"time"
+	"testing"
 )
 
-func main() {
-	times, _ := strconv.Atoi(os.Args[1])
-	start := time.Now()
-	var b []byte
-	for i := 0; i < times; i++ {
+func BenchmarkToString(b *testing.B) {
+	var bs []byte
+	for i := 0; i < b.N; i++ {
 		s := strconv.Itoa(37)
-		b = append(b, []byte(s)...)
+		bs = append(bs, []byte(s)...)
 		f := fmt.Sprintf("%f", 0.3497)
-		b = append(b, []byte(f)...)
+		bs = append(bs, []byte(f)...)
 		i := strconv.Itoa(37)
-		b = append(b, []byte(i)...)
-		// bf := new(bytes.Buffer)
-		// encodeString(bf, "choke")
-		// encodeInteger(bf, 37)
-		// encodeFloat(bf, 0.3498)
-		b = []byte{}
+		bs = append(bs, []byte(i)...)
+		bs = []byte{}
 	}
-	log.Println(time.Since(start))
-	log.Println(b)
+}
+
+func BenchmarkTLVEncode(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		bf := new(bytes.Buffer)
+		encodeString(bf, "choke")
+		encodeInteger(bf, 37)
+		encodeFloat(bf, 0.3498)
+		bf.Bytes()
+	}
 }
