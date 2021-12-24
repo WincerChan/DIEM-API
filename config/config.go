@@ -6,15 +6,17 @@ import (
 	T "DIEM-API/tools"
 	L "DIEM-API/tools/logfactory"
 	C "DIEM-API/tools/tomlparser"
+	V "DIEM-API/views"
 	"os"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	gar "google.golang.org/api/analyticsreporting/v4"
 )
 
 var (
 	RalPool    *RPC.Pool
-	SearchPool *RPC.Pool
+	configPath string
 	GAViewID   string
 	err        error
 	// AnalyticsReportingService is same as before
@@ -61,7 +63,7 @@ func initSearchAPI() {
 	} else {
 		addr = C.GetString("search.addr")
 	}
-	SearchPool = RPC.NewPool(
+	V.SearchPool = RPC.NewPool(
 		C.GetInt("search.poolsize"),
 		addr,
 		RPC.DialTCP,
@@ -69,8 +71,11 @@ func initSearchAPI() {
 }
 
 // InitConfig init all config
-func InitConfig(service string) {
-	C.LoadTOML()
+func InitConfig(conf string) {
+	configPath = conf
+}
+func InitService(r *gin.Engine, service string) {
+	C.LoadTOML(configPath)
 	initRPCServer()
 	initLogService()
 	if strings.HasPrefix("hitokoto", service) {
@@ -82,10 +87,11 @@ func InitConfig(service string) {
 	if strings.HasPrefix("search", service) {
 		initSearchAPI()
 	}
+	V.Register(r, service)
 }
 
 func MigrateBolt() {
-	C.LoadTOML()
+	C.LoadTOML(configPath)
 	path := C.ConfigAbsPath("hitokoto.dbpath")
 	os.Remove(path)
 	println("Trying to migrate database")
