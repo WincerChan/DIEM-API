@@ -1,15 +1,17 @@
 package views
 
 import (
-	C "DIEM-API/config"
 	B "DIEM-API/models/blogs"
 	I "DIEM-API/rpcserver"
+	RPC "DIEM-API/rpcserver"
 	T "DIEM-API/tools"
 	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
+
+var SearchPool *RPC.Pool
 
 func checkSearchParams(ctx *gin.Context, p *B.Params) {
 	err := ctx.Bind(p)
@@ -61,7 +63,7 @@ func execute(ctx *gin.Context) []byte {
 	// v, err := json.Marshal(p)
 	// log.Println(string(v))
 	T.CheckException(err, "decode json error")
-	ret := I.Search(p.Paginate, p.DateRange, p.Terms, p.Query, C.SearchPool)
+	ret := I.Search(p.Paginate, p.DateRange, p.Terms, p.Query, SearchPool)
 	return []byte(T.Str(ret[0]))
 }
 

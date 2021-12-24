@@ -2,7 +2,6 @@ package main
 
 import (
 	M "DIEM-API/middleware"
-	V "DIEM-API/views"
 	"flag"
 	"os"
 
@@ -14,7 +13,9 @@ import (
 func getServerFromArgs() string {
 	isMigrate := flag.Bool("migrate", false, "should migrate?")
 	service := flag.String("view", "", "running service")
+	config := flag.String("config", "", "config file")
 	flag.Parse()
+	F.InitConfig(*config)
 	if *isMigrate {
 		F.MigrateBolt()
 		os.Exit(0)
@@ -24,11 +25,10 @@ func getServerFromArgs() string {
 
 func main() {
 	service := getServerFromArgs()
-	F.InitConfig(service)
 	r := gin.New()
+	// register for views
+	F.InitService(r, service)
 	// register for middlewares
 	M.Register(r)
-	// register for views
-	V.Register(r, service)
 	r.Run()
 }
