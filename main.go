@@ -5,6 +5,8 @@ import (
 	"flag"
 	"os"
 
+	H "DIEM-API/models/hitokoto"
+
 	F "DIEM-API/config"
 
 	"github.com/gin-gonic/gin"
@@ -17,7 +19,7 @@ func getServerFromArgs() string {
 	flag.Parse()
 	F.InitConfig(*config)
 	if *isMigrate {
-		F.MigrateBolt()
+		H.MigrateBolt()
 		os.Exit(0)
 	}
 	return *service

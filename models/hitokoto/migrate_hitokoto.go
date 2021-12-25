@@ -1,6 +1,9 @@
-package tools
+package hitokoto
 
 import (
+	T "DIEM-API/tools"
+	L "DIEM-API/tools/logfactory"
+	C "DIEM-API/tools/tomlparser"
 	"bufio"
 	"bytes"
 	"encoding/binary"
@@ -54,9 +57,9 @@ func formatAsRecord(data []string) []Record {
 	for i, text := range data {
 		words := strings.Split(text, "\t")
 		xxhash, err := strconv.Atoi(words[0])
-		CheckFatalError(err, false)
+		T.CheckFatalError(err, false)
 		length, err := strconv.Atoi(words[2])
-		CheckFatalError(err, false)
+		T.CheckFatalError(err, false)
 		r := &Record{
 			Xxhash: int64(xxhash),
 			Length: length,
@@ -74,20 +77,20 @@ func bulkInsert(db *bolt.DB, data []string) {
 	sort.Sort(SortBy(records))
 	db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("hitokoto"))
-		CheckFatalError(err, false)
+		T.CheckFatalError(err, false)
 		for i, r := range records {
 			key := make([]byte, 4)
 			binary.BigEndian.PutUint32(key, uint32(i))
 			value := new(bytes.Buffer)
 			err := gob.NewEncoder(value).Encode(r)
-			CheckFatalError(err, false)
+			T.CheckFatalError(err, false)
 			b.Put(key, value.Bytes())
 		}
 		return nil
 	})
 }
 
-func MigrateHitokoto(source, path string) {
+func migrateHitokoto(source, path string) {
 	db, _ := bolt.Open(path, 0666, nil)
 	file, err := os.Open(source)
 	if err != nil {
@@ -102,4 +105,13 @@ func MigrateHitokoto(source, path string) {
 		hitokotos = append(hitokotos, scanner.Text())
 	}
 	bulkInsert(db, hitokotos)
+}
+
+func MigrateBolt() {
+	path := C.ConfigAbsPath("hitokoto.dbpath")
+	source := C.ConfigAbsPath("hitokoto.source")
+	os.Remove(path)
+	L.Error.Debug().Msg("Trying to migrate database")
+	migrateHitokoto(source, path)
+	L.Error.Debug().Msg("Succeed.")
 }
