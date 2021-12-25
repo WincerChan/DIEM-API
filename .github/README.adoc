@@ -70,7 +70,7 @@ clone 本仓库并在 `diem.toml` 修改相关的信息。
 ----
 go build -o server # <1>
 ./server -config diem.toml -migrate # <2>
-env GIN_MODE=release ./server -config -config diem.toml # <3>
+env GIN_MODE=release ./server -config diem.toml # <3>
 ----
 <1> 编译成二进制
 <2> 创建 Hitokoto 的数据库（基于 Bolt）
