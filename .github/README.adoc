@@ -80,7 +80,7 @@ env GIN_MODE=release ./server -config -config diem.toml # <3>
 
 === 容器版部署（推荐）
 
-由于引入了 Unix Domain Socket，所以已经不再适合 K8s 部署了，仍有这方面需求的可以切换到 HTTP Branch，但我不会再更新相关的配置了。
+由于默认采用 Unix Domain Socket 作为通信方式，如果想在 K8s 或者 Docker 或者跨机器部署的话，需要将配置文件里面的 network 的字段值改为 tcp。
 
 == 致谢
 
