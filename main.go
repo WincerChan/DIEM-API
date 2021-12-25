@@ -26,9 +26,9 @@ func getServerFromArgs() string {
 func main() {
 	service := getServerFromArgs()
 	r := gin.New()
-	// register for views
-	F.InitService(r, service)
 	// register for middlewares
 	M.Register(r)
+	// register for views
+	F.InitService(r, service)
 	r.Run()
 }
