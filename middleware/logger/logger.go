@@ -2,6 +2,7 @@ package logger
 
 import (
 	Logf "DIEM-API/tools/logfactory"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,6 +13,6 @@ func Log(c *gin.Context) {
 		Str("Error", c.Errors.String()).
 		Int("Status", c.Writer.Status()).
 		Str("Path", c.Request.URL.String()).
-		Str("XFF", c.GetHeader("X-Forwarded-For")).
+		Str("XFF", c.ClientIP()).
 		Msg("")
 }
