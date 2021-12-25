@@ -69,8 +69,8 @@ clone 本仓库并在 `diem.toml` 修改相关的信息。
 [source,sh]
 ----
 go build -o server # <1>
-env CONFIG=./ ./server migrate # <2>
-env GIN_MODE=release CONFIG=./ ./server # <3>
+./server -config diem.toml -migrate # <2>
+env GIN_MODE=release ./server -config -config diem.toml # <3>
 ----
 <1> 编译成二进制
 <2> 创建 Hitokoto 的数据库（基于 Bolt）
