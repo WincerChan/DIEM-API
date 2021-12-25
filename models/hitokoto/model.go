@@ -20,18 +20,6 @@ type Params struct {
 	Encode   string `form:"encode"`
 }
 
-type HitoInfo struct {
-	Source string `json:"source"`
-	Hito   string `json:"hitokoto"`
-}
-
-type Record struct {
-	Xxhash   int64
-	Length   int
-	Origin   string
-	Hitokoto HitoInfo
-}
-
 func LoadRecordFromBytes(value []byte) Record {
 	buf, r := new(bytes.Buffer), new(Record)
 	buf.Write(value)
