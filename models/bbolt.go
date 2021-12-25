@@ -22,4 +22,5 @@ func InitBoltConn(path string) {
 	db, err := bolt.Open(path, 0666, &bolt.Options{ReadOnly: true})
 	T.CheckFatalError(err, false)
 	BoltDB = &BoltConn{*db}
+	BoltDB.Read(InitHitokoto)
 }

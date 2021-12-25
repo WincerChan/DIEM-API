@@ -1,16 +1,25 @@
 package limiting
 
 import (
-	C "DIEM-API/config"
 	I "DIEM-API/rpcserver"
 	T "DIEM-API/tools"
 
 	"github.com/gin-gonic/gin"
 )
 
+var RalPool *I.Pool
+
+func InitRalPool(type_ string, addr string, poolSize int) {
+	if type_ == "uds" {
+		RalPool = I.NewPool(poolSize, addr, I.DialUDS)
+	} else {
+		RalPool = I.NewPool(poolSize, addr, I.DialTCP)
+	}
+}
+
 // request redis's throttle module for limit-rating info.
 func check(xff string) []interface{} {
-	return I.Choke(xff, 10, 0.1, C.RalPool)
+	return I.Choke(xff, 10, 0.1, RalPool)
 }
 
 // check if current request is valid

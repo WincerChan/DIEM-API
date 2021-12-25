@@ -2,26 +2,21 @@ package config
 
 import (
 	D "DIEM-API/models"
-	RPC "DIEM-API/rpcserver"
 	T "DIEM-API/tools"
 	L "DIEM-API/tools/logfactory"
 	C "DIEM-API/tools/tomlparser"
 	V "DIEM-API/views"
+
+	R "DIEM-API/middleware/limiting"
 	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	gar "google.golang.org/api/analyticsreporting/v4"
 )
 
 var (
-	RalPool    *RPC.Pool
 	configPath string
-	GAViewID   string
-	err        error
 	// AnalyticsReportingService is same as before
-	AnalyticsReportingService *gar.Service
-	RegisterService           []string
 )
 
 func initLogService() {
@@ -29,60 +24,57 @@ func initLogService() {
 }
 
 // load config file(`config.yaml`) from disk.
-func loadConfig() {
+func loadCredential() {
 	id := C.GetString("credential.analytics-id")
 	credentialPath := C.ConfigAbsPath("credential.filename")
 	D.InitGoogleAnalytics(id, credentialPath)
 }
 
+func loadAddrFromConfig(component string) (net, addr string) {
+	networkType := component + ".network"
+	addrPath := component + ".addr"
+	net = C.GetString(networkType)
+	if net == "uds" {
+		addr = C.ConfigAbsPath(addrPath)
+	} else {
+		addr = C.GetString(addrPath)
+	}
+	return
+}
+
 func initDatabase() {
 	path := C.ConfigAbsPath("hitokoto.dbpath")
 	D.InitBoltConn(path)
-	D.BoltDB.Read(D.InitHitokoto)
 }
 
 // init rpc server Connection-Pool
 func initRPCServer() {
-	var addr string
-	if C.GetString("rate-limit.network") == "uds" {
-		addr = C.ConfigAbsPath("rate-limit.addr")
-	} else {
-		addr = C.GetString("rate-limit.addr")
-	}
-	RalPool = RPC.NewPool(
-		C.GetInt("rate-limit.poolsize"),
-		addr,
-		RPC.DialUDS,
-	)
+	net, addr := loadAddrFromConfig("rate-limit")
+	R.InitRalPool(net, addr, C.GetInt("rate-limit.poolsize"))
 }
 
 func initSearchAPI() {
-	var addr string
-	if C.GetString("search.network") == "uds" {
-		addr = C.ConfigAbsPath("search.addr")
-	} else {
-		addr = C.GetString("search.addr")
-	}
-	V.SearchPool = RPC.NewPool(
-		C.GetInt("search.poolsize"),
-		addr,
-		RPC.DialTCP,
-	)
+	net, addr := loadAddrFromConfig("search")
+	V.InitSearchPool(net, addr, C.GetInt("search.poolsize"))
 }
 
 // InitConfig init all config
 func InitConfig(conf string) {
-	configPath = conf
+	C.LoadTOML(conf)
+	initCommonService()
 }
-func InitService(r *gin.Engine, service string) {
-	C.LoadTOML(configPath)
+
+func initCommonService() {
 	initRPCServer()
 	initLogService()
+}
+
+func InitService(r *gin.Engine, service string) {
 	if strings.HasPrefix("hitokoto", service) {
 		initDatabase()
 	}
 	if strings.HasPrefix("analytics", service) {
-		loadConfig()
+		loadCredential()
 	}
 	if strings.HasPrefix("search", service) {
 		initSearchAPI()
@@ -91,10 +83,9 @@ func InitService(r *gin.Engine, service string) {
 }
 
 func MigrateBolt() {
-	C.LoadTOML(configPath)
 	path := C.ConfigAbsPath("hitokoto.dbpath")
 	os.Remove(path)
-	println("Trying to migrate database")
+	L.Error.Debug().Msg("Trying to migrate database")
 	T.MigrateHitokoto(C.ConfigAbsPath("hitokoto.source"), path)
-	println("succeed.")
+	L.Error.Debug().Msg("Succeed.")
 }

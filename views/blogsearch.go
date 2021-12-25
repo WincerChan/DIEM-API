@@ -3,7 +3,6 @@ package views
 import (
 	B "DIEM-API/models/blogs"
 	I "DIEM-API/rpcserver"
-	RPC "DIEM-API/rpcserver"
 	T "DIEM-API/tools"
 	"fmt"
 	"time"
@@ -11,7 +10,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var SearchPool *RPC.Pool
+var SearchPool *I.Pool
+
+func InitSearchPool(type_ string, addr string, poolSize int) {
+	if type_ == "uds" {
+		SearchPool = I.NewPool(poolSize, addr, I.DialUDS)
+	} else {
+		SearchPool = I.NewPool(poolSize, addr, I.DialTCP)
+	}
+}
 
 func checkSearchParams(ctx *gin.Context, p *B.Params) {
 	err := ctx.Bind(p)

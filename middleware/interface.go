@@ -14,6 +14,5 @@ func Register(r *gin.Engine) {
 	if T.GetBool("rate-limit.enable") {
 		r.Use(C.Limiting)
 	}
-	r.Use(L.Log)
-	r.Use(R.Recover)
+	r.Use(L.Log, R.Recover)
 }
