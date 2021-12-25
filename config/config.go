@@ -2,21 +2,14 @@ package config
 
 import (
 	D "DIEM-API/models"
-	T "DIEM-API/tools"
 	L "DIEM-API/tools/logfactory"
 	C "DIEM-API/tools/tomlparser"
 	V "DIEM-API/views"
 
 	R "DIEM-API/middleware/limiting"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-)
-
-var (
-	configPath string
-	// AnalyticsReportingService is same as before
 )
 
 func initLogService() {
@@ -80,12 +73,4 @@ func InitService(r *gin.Engine, service string) {
 		initSearchAPI()
 	}
 	V.Register(r, service)
-}
-
-func MigrateBolt() {
-	path := C.ConfigAbsPath("hitokoto.dbpath")
-	os.Remove(path)
-	L.Error.Debug().Msg("Trying to migrate database")
-	T.MigrateHitokoto(C.ConfigAbsPath("hitokoto.source"), path)
-	L.Error.Debug().Msg("Succeed.")
 }
