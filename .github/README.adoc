@@ -40,7 +40,7 @@ image:https://img.shields.io/github/languages/code-size/WincerChan/Hitokoto.svg?
 ./DIEM-API -migrate
 ----
 
-数据库的配置路径以及 Hitokoto 源文件的配置路径在配置文件的 [hitokoto] 字段。其中源文件的每一行格式是包含以下元素的五元组：
+数据库的配置路径以及 Hitokoto 源文件的配置路径在配置文件的 [hitokoto] 字段。其中源文件的每一行格式是包含以下元素的五元组（不同列之间采用制表符分割）：
 
 |===
 |  | id | origin | length | source | hitokoto 
@@ -60,7 +60,7 @@ image:https://img.shields.io/github/languages/code-size/WincerChan/Hitokoto.svg?
 | 我太年轻了，甚至不懂怎么去爱她。
 |===
 
-避免侵权，我不会将接口目前使用的一言数据库源文件公开，如果有需要，可以使用 https://github.com/hitokoto-osc/sentences-bundle[hitokoto.cn 开源的句子]，或者使用我之前写的https://github.com/WincerChan/Hitokoto-Spider[一言爬虫]来爬取，聪明如你肯定知道如何把 JSON 格式转化成对应的五元组～
+避免侵权，我不会将接口目前使用的一言数据库源文件公开，如果有需要，可以使用 https://github.com/hitokoto-osc/sentences-bundle[hitokoto.cn 开源的句子]，或者使用我之前写的 https://github.com/WincerChan/Hitokoto-Spider[一言爬虫] 来爬取，聪明如你肯定知道如何把 JSON 格式转化成对应的五元组～
 
 === 普通部署
 
