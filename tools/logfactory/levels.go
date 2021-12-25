@@ -24,7 +24,7 @@ func InitLog() {
 	zlogStderr := zerolog.ConsoleWriter{Out: os.Stderr}
 
 	zlogE = zerolog.New(zlogStderr).With().Timestamp().Logger()
-	// zlogA = zerolog.New(zlogStderr).With().Timestamp().Logger() // comment is to disable access log
+	zlogA = zerolog.New(zlogStderr).With().Timestamp().Logger() // comment is to disable access log
 }
 
 func newFactory(level, logPath string) *factory {

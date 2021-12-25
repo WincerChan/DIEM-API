@@ -9,7 +9,7 @@ import (
 
 var RalPool *I.Pool
 
-func InitRateLimit(type_ string, addr string, poolSize int) {
+func InitRalPool(type_ string, addr string, poolSize int) {
 	if type_ == "uds" {
 		RalPool = I.NewPool(poolSize, addr, I.DialUDS)
 	} else {
