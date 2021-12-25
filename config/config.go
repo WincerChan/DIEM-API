@@ -7,6 +7,8 @@ import (
 	L "DIEM-API/tools/logfactory"
 	C "DIEM-API/tools/tomlparser"
 	V "DIEM-API/views"
+
+	R "DIEM-API/middleware/limiting"
 	"os"
 	"strings"
 
@@ -15,10 +17,8 @@ import (
 )
 
 var (
-	RalPool    *RPC.Pool
 	configPath string
 	GAViewID   string
-	err        error
 	// AnalyticsReportingService is same as before
 	AnalyticsReportingService *gar.Service
 	RegisterService           []string
@@ -49,11 +49,7 @@ func initRPCServer() {
 	} else {
 		addr = C.GetString("rate-limit.addr")
 	}
-	RalPool = RPC.NewPool(
-		C.GetInt("rate-limit.poolsize"),
-		addr,
-		RPC.DialUDS,
-	)
+	R.InitRateLimit("uds", addr, C.GetInt("rate-limit.poolsize"))
 }
 
 func initSearchAPI() {
