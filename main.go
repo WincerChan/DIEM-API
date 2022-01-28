@@ -3,6 +3,7 @@ package main
 import (
 	M "DIEM-API/middleware"
 	"flag"
+	"fmt"
 	"os"
 
 	H "DIEM-API/models/hitokoto"
@@ -13,16 +14,28 @@ import (
 )
 
 func getServerFromArgs() string {
-	isMigrate := flag.Bool("migrate", false, "should migrate?")
-	service := flag.String("view", "", "running service")
-	config := flag.String("config", "", "config file")
+	isMigrate := false
+	service := ""
+	config := ""
+	flag.BoolVar(&isMigrate, "migrate", false, "shuld migrate?")
+	flag.BoolVar(&isMigrate, "m", false, "shuld migrate?")
+	flag.StringVar(&service, "service", "", "running service")
+	flag.StringVar(&service, "s", "", "running service")
+	flag.StringVar(&config, "config", "", "config file")
+	flag.StringVar(&config, "c", "", "config file")
 	flag.Parse()
-	F.InitConfig(*config)
-	if *isMigrate {
+	// config not provided
+	if config == "" {
+		fmt.Printf("Usage of %s:\n", os.Args[0])
+		flag.PrintDefaults()
+		os.Exit(1)
+	}
+	F.InitConfig(config)
+	if isMigrate {
 		H.MigrateBolt()
 		os.Exit(0)
 	}
-	return *service
+	return service
 }
 
 func main() {

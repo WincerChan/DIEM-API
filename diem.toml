@@ -15,7 +15,7 @@ enable = false
 [search]
 network = "tcp"  # or uds
 poolsize = 1
-addr = "127.0.0.1:8002"
+addr = "127.0.0.1:8834"
 
 [credential]
 analytics-id = "153425181"
