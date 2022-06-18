@@ -61,7 +61,7 @@ func (p *Params) BindTerms(str string) string {
 	truncated := make([]string, 0, 4)
 	if len(terms) > 4 {
 		truncated = terms[:4]
-	} else if len(terms) != 1 {
+	} else {
 		truncated = terms
 	}
 	for _, term := range truncated {
