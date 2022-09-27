@@ -71,6 +71,9 @@ func execute(ctx *gin.Context) []byte {
 	// log.Println(string(v))
 	T.CheckException(err, "decode json error")
 	ret := I.Search(p.Paginate, p.DateRange, p.Terms, p.Query, SearchPool)
+	if len(ret) == 0 {
+		return []byte("{\"msg\": \"error, try again later.\"}")
+	}
 	return []byte(T.Str(ret[0]))
 }
 

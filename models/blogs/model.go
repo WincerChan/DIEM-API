@@ -59,7 +59,9 @@ func (p *Params) BindTerms(str string) string {
 	terms := strings.Split(str, " ")
 	p.Terms = make([]string, 0, 4)
 	truncated := make([]string, 0, 4)
-	if len(terms) > 4 {
+	if terms[0] == "" {
+		return ""
+	} else if len(terms) > 4 {
 		truncated = terms[:4]
 	} else {
 		truncated = terms
